@@ -29,7 +29,7 @@ Route::post('/whatsapp/webhook', function () {
         }elseif(!MensagensModel::where('numero_id','=',$conversa->id)->first()){ // pegar nome 
             $conversa->update(['nome' => $msgTxt]);
             MensagensModel::create(['numero_id' => $conversa->id, 'msg' => "Nome do Cliente:".$msgTxt]);
-            enviarMsg($business_phone_number_id, $number,"Muito bem ".$msgTxt. " vamos começar. Desta vez estou ajudando como um dicionário Português/Ingles pode me perguntar sobre alguma palavra ou frase que vou te ajudar!");
+            enviarMsg($business_phone_number_id, $number,"Muito bem ".$msgTxt. " vamos começar. Desta vez estou ajudando como um dicionário Português/Ingles/Japonês pode me perguntar sobre alguma palavra ou frase que vou te ajudar!");
         }else{
             // Body
             $body = '{"contents": [';
@@ -38,8 +38,8 @@ Route::post('/whatsapp/webhook', function () {
             $body .= '{"role": "user", "parts": [{"text": "';
 
             $body .= '[Instruções]';
-            $body .= 'Você é um assistente virtual que traduz palavras do ingles para o português, o cliente vai mandar as palavras ou perguntas voce deve sempre fornecer uma resposta de um dicionario com pelo menos um exemplo';
-            $body .= ' e sinonimos da palavra em ingles;';
+            $body .= 'Você é um assistente virtual que traduz palavras do ingles para o português ou do japones para o português, o cliente vai mandar as palavras ou perguntas voce deve sempre fornecer uma resposta de um dicionario com pelo menos um exemplo';
+            $body .= ' e sinonimos da palavra em ingles/japones, pode utilizar ideogramas;';
             $body .= 'Responda somente sobre o assunto;';
             $body .= 'Utilizar marcações de texto compativeis com whatsapp;';
             $body .= 'Se não tiverem mensagens anteriores, responda com uma mensagem de boas vindas e explique que voce vai ajudar com dicionarios;';
