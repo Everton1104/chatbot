@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('manutencao');
 });
+Route::get('teste', function () {
+    dd(MensagensModel::where('numero_id','=',1)->where('created_at','>=',now()->subHours(2))->get());
+});
 
 require __DIR__.'/auth.php';
 
@@ -26,23 +29,36 @@ Route::post('/whatsapp/webhook', function () {
         }elseif(!MensagensModel::where('numero_id','=',$conversa->id)->first()){ // pegar nome 
             $conversa->update(['nome' => $msgTxt]);
             MensagensModel::create(['numero_id' => $conversa->id, 'msg' => "Nome do Cliente:".$msgTxt]);
-            enviarMsg($business_phone_number_id, $number,"Muito bem ".$msgTxt. " vamos começar. Em que posso ajudar?");
+            enviarMsg($business_phone_number_id, $number,"Muito bem ".$msgTxt. " vamos começar. Desta vez estou ajudando como um dicionário Português/Ingles pode me perguntar sobre alguma palavra ou frase que vou te ajudar!");
         }else{
             // Body
             $body = '{"contents": [';
-            $data = now()->subHours(2); // ultimas duas horas da data atual
-            $msgs = MensagensModel::where('numero_id','=',$conversa->id)->where('created_at','>=',$data)->get();// pega as mensagens da ultimas duas horas da data atual
+            $msgs = MensagensModel::where('numero_id','=',$conversa->id)->where('created_at','>=',now()->subHours(1))->get();// pega as mensagens da ultimas duas horas da data atual
             // Body
-
             $body .= '{"role": "user", "parts": [{"text": "';
 
-            $body .= '[Inicio das mensagens anteriores] \n\n';
+            $body .= '[Instruções]';
+            $body .= 'Você é um assistente virtual que traduz palavras do ingles para o português, o cliente vai mandar as palavras ou perguntas voce deve sempre fornecer uma resposta de um dicionario com pelo menos um exemplo';
+            $body .= ' e sinonimos da palavra em ingles;';
+            $body .= 'Responda somente sobre o assunto;';
+            $body .= 'Utilizar marcações de texto compativeis com whatsapp;';
+            $body .= 'Se não tiverem mensagens anteriores, responda com uma mensagem de boas vindas e explique que voce vai ajudar com dicionarios;';
+            $body .= 'Sempre utilizar o Idioma Portugês do Brasil;';
+            $body .= 'O nome do cliente é: '. $conversa->nome.';';
+            $body .= 'O formato da data é DD/MM/YYYY HH:II:SS;';
+            $body .= '[/Instruções]';
+            $body .= '[Contexto]';
+            $body .= '[Mensagens]';
             foreach ($msgs as $msg) {
-                $body .= '[' . $msg->$msg . ']\n\n';
+                if($msg->tipo == 1){
+                    $body .= ' [' . date('d/m/Y H:i:s', strtotime($msg->created_at)).'] Cliente ' . str_replace(array('"', "'"), '', $msg->msg);
+                }else{
+                    $body .= ' [' . date('d/m/Y H:i:s', strtotime($msg->created_at)).'] Modelo ' . str_replace(array('"', "'"), '', $msg->msg);
+                }
             }
-            $body .= '[Fim das mensagens anteriores] \n\n';
-            
-            $body .= 'Ultima mensagem do cliente: \n\n' . $msgTxt . '"}]},';
+            $body .= '[/Mensagens]';
+            $body .= '[/Contexto]';
+            $body .= 'Mensagem atual -> ' . $msgTxt . ';"}]},';
 
             // Body
             $body .= '],}';
