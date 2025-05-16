@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ChatController;
 use App\Models\ConversasModel;
 use App\Models\MensagensModel;
 use Illuminate\Http\Request;
@@ -109,3 +110,8 @@ Route::get('/whatsapp/webhook', function () {
     }
     return response('Token de verificação inválido', 403);
 });
+
+
+Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
+Route::post('chat-send', [ChatController::class, 'EnviaMensagem'])->name('chat.send');
+
