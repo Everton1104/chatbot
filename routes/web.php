@@ -1,25 +1,44 @@
 <?php
 
+date_default_timezone_set('America/Sao_Paulo');
+
+use App\Events\ChatEnviaMensagem;
 use App\Http\Controllers\ChatController;
 use App\Models\ConversasModel;
 use App\Models\MensagensModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
+require __DIR__.'/auth.php';
 
 Route::get('/', function () {
     return view('manutencao');
 });
+
+Route::get('politicabot', function () {
+    return view('politicabot');
+});
+
+Route::get('register', function () {
+    return view('manutencao');
+});
+
 Route::get('teste', function () {
     dd(MensagensModel::where('numero_id','=',1)->where('created_at','>=',now()->subHours(2))->get());
 });
-
-require __DIR__.'/auth.php';
 
 Route::post('/whatsapp/webhook', function () {
     $business_phone_number_id = Request::capture()['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'];
     $msg = Request::capture()['entry'][0]['changes'][0]['value']['messages'][0];
     $msgTxt = $msg['text']['body'];
     $number = $msg['from'];
+    //  teste
+    if($number == '5511997646569'){
+        ChatEnviaMensagem::dispatch($msgTxt);
+        return;
+    }
+    //  teste
     if($msg['type'] == 'text'){// caso seja msg de texto
         // tratar msg
         $conversa = ConversasModel::where('numero','=',$number)->first();
@@ -102,7 +121,7 @@ function enviarMsg($business_phone_number_id, $numero, $msg) {
 
 Route::get('/whatsapp/webhook', function () {
     $request = Request::capture();
-    $verifyToken = env('WEBHOOK_VERIFY_TOKEN');
+    $verifyToken = env('WEBHOOK_VERIFY_TOKEN');//senha de verificação pessoal
     $challenge = $request['hub_challenge'];
     $token = $request['hub_verify_token'];
     if ($token === $verifyToken) {
@@ -111,7 +130,8 @@ Route::get('/whatsapp/webhook', function () {
     return response('Token de verificação inválido', 403);
 });
 
-
-Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
-Route::post('chat-send', [ChatController::class, 'EnviaMensagem'])->name('chat.send');
+Route::middleware('auth')->group(function () {
+    Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('chat-send', [ChatController::class, 'EnviaMensagem'])->name('chat.send');
+});
 

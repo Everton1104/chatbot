@@ -42,7 +42,7 @@
         $(document).ready(() => {
             // Listen for messages
             window.Echo.channel('chat').listen('.chat.message', function(data) {
-                $('#chat-messages').append(data.message + '<br><br>');
+                $('#chat-messages').append('[' + data.hora + '] ' + data.nome + ': ' + data.message + '<br><br>');
             });
 
             // Handle send message
