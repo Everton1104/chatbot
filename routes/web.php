@@ -10,6 +10,7 @@ use App\Models\MensagensModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
 require __DIR__.'/auth.php';
 
@@ -26,7 +27,12 @@ Route::get('register', function () {
 });
 
 Route::get('command', function () {
-    return 'foi';
+    try {
+        $prompt = Artisan::call('migrate');
+        return $prompt;
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
 });
 
 
