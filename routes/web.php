@@ -25,7 +25,9 @@ Route::get('register', function () {
     return view('manutencao');
 });
 
-Route::resource('command', [CommandController::class])->middleware('auth');
+Route::get('command', function () {
+    return 'foi';
+});
 
 
 Route::get('teste', function () {
