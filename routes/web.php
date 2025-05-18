@@ -36,7 +36,7 @@ Route::get('command', function () {
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
-});
+})->middleware('auth');
 
 
 Route::get('teste', function () {
