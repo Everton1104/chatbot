@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use Symfony\Component\Console\Output\BufferedOutput;
 
 require __DIR__.'/auth.php';
 
@@ -26,10 +27,12 @@ Route::get('register', function () {
     return view('manutencao');
 });
 
+
 Route::get('command', function () {
     try {
-        $prompt = Artisan::call('migrate');
-        return $prompt;
+        $output = new BufferedOutput; // Captura a saída do comando
+        Artisan::call('migrate', [], $output);
+        return $output->fetch();
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
