@@ -4,8 +4,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "serve": "php artisan serve",
-        "reverb": "php artisan reverb:start --debug"
+        "serve": "php artisan serve"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
