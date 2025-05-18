@@ -24,6 +24,10 @@ Route::get('register', function () {
     return view('manutencao');
 });
 
+Route::get('/dashboard', function () {
+    return view('manutencao');
+})->name('dashboard');
+
 Route::get('teste', function () {
     dd(MensagensModel::where('numero_id','=',1)->where('created_at','>=',now()->subHours(2))->get());
 });
