@@ -66,7 +66,7 @@
                         $('#message-input').val('');
                     })
                     .catch(function(err) {
-                        console.error('Erro ao enviar a mensagem axios');
+                        console.error('Erro ao enviar a mensagem axios'+err);
                     });
                 }
             }
