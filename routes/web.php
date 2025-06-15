@@ -16,23 +16,19 @@ use Symfony\Component\Console\Output\BufferedOutput;
 require __DIR__.'/auth.php';
 
 Route::get('/', function () {
-    return view('manutencao');
-});
-
-Route::get('politicabot', function () {
-    return view('politicabot');
-});
-
-Route::get('register', function () {
+    if(Auth::user()){
+        return view('dashboard');
+    }
     return view('manutencao');
 });
 
 Route::get('/dashboard', function () {
-    return view('manutencao');
-})->name('dashboard');
+    return view('dashboard');
+})->name('dashboard')->middleware('auth');
 
-Route::get('teste', function () {
-    dd(MensagensModel::where('numero_id','=',1)->where('created_at','>=',now()->subHours(2))->get());
+
+Route::get('politicabot', function () {
+    return view('politicabot');
 });
 
 Route::post('/whatsapp/webhook', function () {
@@ -141,4 +137,3 @@ Route::middleware('auth')->group(function () {
     Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
     Route::post('chat-send', [ChatController::class, 'EnviaMensagem'])->name('chat.send');
 });
-
