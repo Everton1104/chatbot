@@ -15,7 +15,9 @@ class ChatController extends Controller
 
     public function EnviaMensagem(Request $request)
     {
+        $numero = '5511997646569';
         if(isset(Auth::user()->id)){
+            WhatsappController::enviarMsg(env('PHONE_NUMBER_ID'), $numero, $request->message);
             ChatEnviaMensagem::dispatch($request->message);
         }
         return response()->json(['status' => 'Message sent!']);

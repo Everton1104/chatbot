@@ -36,6 +36,8 @@ Route::post('/whatsapp/webhook', [WhatsappController::class, 'index']);
 
 Route::get('/whatsapp/webhook', [WhatsappController::class, 'show']);
 
+// Route::any('/whatsapp/webhook', [WhatsappController::class, 'teste']);
+
 Route::middleware('auth')->group(function () {
     Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
     Route::post('chat-send', [ChatController::class, 'EnviaMensagem'])->name('chat.send');

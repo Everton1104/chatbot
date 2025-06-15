@@ -7,6 +7,7 @@ use App\Models\ConversasModel;
 use App\Models\MensagensModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class WhatsappController extends Controller
 {
@@ -22,18 +23,42 @@ class WhatsappController extends Controller
         return response('Token de verificação inválido', 403);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $business_phone_number_id = Request::capture()['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'];
-        $msg = Request::capture()['entry'][0]['changes'][0]['value']['messages'][0];
-        $msgTxt = $msg['text']['body'];
-        $number = $msg['from'];
+        $business_phone_number_id = Request::capture()['entry'][0]['changes'][0]['value']['metadata']['phone_number_id']??0;
+        $nome = Request::capture()['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name']??'';
+        $msg = Request::capture()['entry'][0]['changes'][0]['value']['messages'][0]??'';
+        $msgTxt = $msg['text']['body']??'';
+        $number = $msg['from']??0;
+
         //  teste
-        // if($number == '5511997646569'){
-        //     ChatEnviaMensagem::dispatch($msgTxt);
-        //     return;
-        // }
+        if($number == '5511997646569'){
+           
+        }
         //  teste
+        if($request->all()['entry'][0]['changes'][0]['value']['messages'][0]['type'] == 'image'){// caso seja imegem ou arquivo
+            try {
+                $imgId = $request->all()['entry'][0]['changes'][0]['value']['messages'][0]['image']['id'];
+                $imgMime = explode('/', $request->all()['entry'][0]['changes'][0]['value']['messages'][0]['image']['mime_type'])[1];
+                $filename = "{$imgId}.{$imgMime}";
+                $client = new \GuzzleHttp\Client();
+                $response  = $client->request('GET', "https://graph.facebook.com/v23.0/{$imgId}", [
+                    'headers' => [
+                        'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
+                    ]
+                ]);
+                $mediaData = json_decode($response->getBody(), true);
+                $imagem = $client->get($mediaData['url'], [
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . env('GRAPH_API_TOKEN'),
+                    ],
+                ]);
+                Storage::disk('public')->put('whatsapp/'.$filename, $imagem->getBody());
+                $this->enviarMsg($business_phone_number_id, $number, "Link para o arquivo: https://evertonrs.com.br/storage/whatsapp/{$filename}");
+            } catch (\Throwable $th) {
+                ChatEnviaMensagem::dispatch($th);
+            }
+        }
         if($msg['type'] == 'text'){// caso seja msg de texto
             // tratar msg
             $conversa = ConversasModel::where('numero','=',$number)->first();
@@ -86,6 +111,7 @@ class WhatsappController extends Controller
         }else{
             $this->enviarMsg($business_phone_number_id, $number, "Desculpe, apenas mensagens de texto são aceitas.");
         }
+        return response('ok', 200);
     }
 
     public function enviarMsgGemini($body) {
@@ -98,9 +124,9 @@ class WhatsappController extends Controller
         }
     }
 
-    public function enviarMsg($business_phone_number_id, $numero, $msg) {
+    public static function enviarMsg($business_phone_number_id, $numero, $msg) {
         $client = new \GuzzleHttp\Client();
-        $client->request('POST', "https://graph.facebook.com/v18.0/".$business_phone_number_id."/messages", [
+        $client->request('POST', "https://graph.facebook.com/v23.0/".$business_phone_number_id."/messages", [
             'headers' => [
                 'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
             ],
@@ -110,6 +136,24 @@ class WhatsappController extends Controller
                 'text' => [
                     'body' => $msg
                 ],
+            ]
+        ]);
+    }
+
+    public static function enviarImg($business_phone_number_id, $numero, $link, $desc = '') {
+        $client = new \GuzzleHttp\Client();
+        $client->request('POST', "https://graph.facebook.com/v23.0/".$business_phone_number_id."/messages", [
+            'headers' => [
+                'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
+            ],
+            'json' => [
+                'messaging_product' => 'whatsapp',
+                'to' => $numero,
+                'type' => 'image',
+                'image' => [
+                    'link' => $link,
+                    "caption" => $desc
+                ]
             ]
         ]);
     }
