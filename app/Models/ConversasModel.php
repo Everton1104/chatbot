@@ -12,6 +12,7 @@ class ConversasModel extends Model
 
     // Define any fillable attributes
     protected $fillable = [
+        'user_id',
         'numero',
         'nome',
         'status'

@@ -31,87 +31,106 @@ class WhatsappController extends Controller
         $msgTxt = $msg['text']['body']??'';
         $number = $msg['from']??0;
 
-        //  teste
-        if($number == '5511997646569'){
-           
-        }
-        //  teste
-        if($request->all()['entry'][0]['changes'][0]['value']['messages'][0]['type'] == 'image'){// caso seja imegem ou arquivo
-            try {
-                $imgId = $request->all()['entry'][0]['changes'][0]['value']['messages'][0]['image']['id'];
-                $imgMime = explode('/', $request->all()['entry'][0]['changes'][0]['value']['messages'][0]['image']['mime_type'])[1];
-                $filename = "{$imgId}.{$imgMime}";
-                $client = new \GuzzleHttp\Client();
-                $response  = $client->request('GET', "https://graph.facebook.com/v23.0/{$imgId}", [
-                    'headers' => [
-                        'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
-                    ]
-                ]);
-                $mediaData = json_decode($response->getBody(), true);
-                $imagem = $client->get($mediaData['url'], [
-                    'headers' => [
-                        'Authorization' => 'Bearer ' . env('GRAPH_API_TOKEN'),
-                    ],
-                ]);
-                Storage::disk('public')->put('whatsapp/'.$filename, $imagem->getBody());
-                $this->enviarMsg($business_phone_number_id, $number, "Link para o arquivo: https://evertonrs.com.br/storage/whatsapp/{$filename}");
-            } catch (\Throwable $th) {
-                ChatEnviaMensagem::dispatch($th);
-            }
-        }
         if($msg['type'] == 'text'){// caso seja msg de texto
-            // tratar msg
             $conversa = ConversasModel::where('numero','=',$number)->first();
             if(!$conversa){ // Nova conversa
-                ConversasModel::create(['numero' => $number]);
+                $conversa = ConversasModel::create([
+                    'numero' => $number,
+                    'nome' => $nome
+                ]);
                 //msg de boas vindas
-                $this->enviarMsg($business_phone_number_id, $number,"Olá, bem vindo ao chatbot do Evtu, qual é o seu nome?");
-            }elseif(!MensagensModel::where('numero_id','=',$conversa->id)->first()){ // pegar nome 
-                $conversa->update(['nome' => $msgTxt]);
-                MensagensModel::create(['numero_id' => $conversa->id, 'msg' => "Nome do Cliente:".$msgTxt]);
-                $this->enviarMsg($business_phone_number_id, $number,"Muito bem ".$msgTxt. " vamos começar. Desta vez estou ajudando como um dicionário Português/Ingles/Japonês pode me perguntar sobre alguma palavra ou frase que vou te ajudar!");
+                $msgBoasVindas = "Olá, bem vindo ao chatbot do Evtu, antes de começar confirme com \"sim\" se seu nome esta correto?\n\n".$nome."\n\nSe não estiver correto, digite seu nome.";
+                $this->enviarMsg($business_phone_number_id, $number,$msgBoasVindas);
+                MensagensModel::create([
+                    'conversa_id' => $conversa->id, 
+                    'msg' => $msgBoasVindas,
+                    'tipo' => 0, // boas vindas
+                ]);
             }else{
-                // Body
-                $body = '{"contents": [';
-                $msgs = MensagensModel::where('numero_id','=',$conversa->id)->where('created_at','>=',now()->subHours(1))->get();// pega as mensagens da ultimas duas horas da data atual
-                // Body
-                $body .= '{"role": "user", "parts": [{"text": "';
+                $msgs = MensagensModel::where('conversa_id','=',$conversa->id)->orderBy('created_at', 'desc')->get();
 
-                $body .= '[Instruções]';
-                $body .= 'Você é um assistente virtual que traduz palavras do ingles para o português ou do japones para o português, o cliente vai mandar as palavras ou perguntas voce deve sempre fornecer uma resposta de um dicionario com pelo menos um exemplo';
-                $body .= ' e sinonimos da palavra em ingles/japones, pode utilizar ideogramas;';
-                $body .= 'Responda somente sobre o assunto;';
-                $body .= 'Utilizar marcações de texto compativeis com whatsapp;';
-                $body .= 'Se não tiverem mensagens anteriores, responda com uma mensagem de boas vindas e explique que voce vai ajudar com dicionarios;';
-                $body .= 'Sempre utilizar o Idioma Portugês do Brasil;';
-                $body .= 'O nome do cliente é: '. $conversa->nome.';';
-                $body .= 'O formato da data é DD/MM/YYYY HH:II:SS;';
-                $body .= '[/Instruções]';
-                $body .= '[Contexto]';
-                $body .= '[Mensagens]';
-                foreach ($msgs as $msg) {
-                    if($msg->tipo == 1){
-                        $body .= ' [' . date('d/m/Y H:i:s', strtotime($msg->created_at)).'] Cliente ' . str_replace(array('"', "'"), '', $msg->msg);
-                    }else{
-                        $body .= ' [' . date('d/m/Y H:i:s', strtotime($msg->created_at)).'] Modelo ' . str_replace(array('"', "'"), '', $msg->msg);
+                // atualiza o nome
+                if($msgs[0]->tipo == 0){
+                    if(strtolower($msgTxt) != 'sim' || strtolower($msgTxt) != 's'){
+                        $conversa->update(['nome' => $msgTxt]);
                     }
+                }elseif(count($msgs) == 1){
+                    $msg = "Certo ".$nome.", como posso te ajudar?";
+                    $this->enviarMsg($business_phone_number_id, $number,$msg);
+                    MensagensModel::create([
+                        'conversa_id' => $conversa->id, 
+                        'msg' => $msg,
+                        'tipo' => 1, // bot
+                    ]);
+                }else{
+                    $this->enviarMsg($business_phone_number_id, $number,'echo-> '.$msgTxt);
                 }
-                $body .= '[/Mensagens]';
-                $body .= '[/Contexto]';
-                $body .= 'Mensagem atual -> ' . $msgTxt . ';"}]},';
+                // // Body
+                // $body = '{"contents": [';
+                // $msgs = MensagensModel::where('numero_id','=',$conversa->id)->where('created_at','>=',now()->subHours(1))->get();// pega as mensagens da ultimas duas horas da data atual
+                // // Body
+                // $body .= '{"role": "user", "parts": [{"text": "';
 
-                // Body
-                $body .= '],}';
-                // Body
-                MensagensModel::create(['numero_id' => $conversa->id, 'msg' => $msgTxt, 'tipo' => 1]);
-                $resposta = $this->enviarMsgGemini($body);
-                MensagensModel::create(['numero_id' => $conversa->id, 'msg' => $resposta, 'tipo' => 2]);
-                $this->enviarMsg($business_phone_number_id, $number, $resposta);
+                // $body .= '[Instruções]';
+                // $body .= 'Você é um assistente virtual que traduz palavras do ingles para o português ou do japones para o português, o cliente vai mandar as palavras ou perguntas voce deve sempre fornecer uma resposta de um dicionario com pelo menos um exemplo';
+                // $body .= ' e sinonimos da palavra em ingles/japones, pode utilizar ideogramas;';
+                // $body .= 'Responda somente sobre o assunto;';
+                // $body .= 'Utilizar marcações de texto compativeis com whatsapp;';
+                // $body .= 'Se não tiverem mensagens anteriores, responda com uma mensagem de boas vindas e explique que voce vai ajudar com dicionarios;';
+                // $body .= 'Sempre utilizar o Idioma Portugês do Brasil;';
+                // $body .= 'O nome do cliente é: '. $conversa->nome.';';
+                // $body .= 'O formato da data é DD/MM/YYYY HH:II:SS;';
+                // $body .= '[/Instruções]';
+                // $body .= '[Contexto]';
+                // $body .= '[Mensagens]';
+                // foreach ($msgs as $msg) {
+                //     if($msg->tipo == 1){
+                //         $body .= ' [' . date('d/m/Y H:i:s', strtotime($msg->created_at)).'] Cliente ' . str_replace(array('"', "'"), '', $msg->msg);
+                //     }else{
+                //         $body .= ' [' . date('d/m/Y H:i:s', strtotime($msg->created_at)).'] Modelo ' . str_replace(array('"', "'"), '', $msg->msg);
+                //     }
+                // }
+                // $body .= '[/Mensagens]';
+                // $body .= '[/Contexto]';
+                // $body .= 'Mensagem atual -> ' . $msgTxt . ';"}]},';
+
+                // // Body
+                // $body .= '],}';
+                // // Body
+                // MensagensModel::create(['numero_id' => $conversa->id, 'msg' => $msgTxt, 'tipo' => 1]);
+                // $resposta = $this->enviarMsgGemini($body);
+                // MensagensModel::create(['numero_id' => $conversa->id, 'msg' => $resposta, 'tipo' => 2]);
+                // $this->enviarMsg($business_phone_number_id, $number, $resposta);
             }
         }else{
-            $this->enviarMsg($business_phone_number_id, $number, "Desculpe, apenas mensagens de texto são aceitas.");
+            $this->enviarMsg($business_phone_number_id, $number, "Desculpe, por enquanto apenas mensagens de texto são aceitas.");
         }
         return response('ok', 200);
+
+        // //tratamento de imagens
+        // if($request->all()['entry'][0]['changes'][0]['value']['messages'][0]['type'] == 'image'){// caso seja imegem ou arquivo
+        //     try {
+        //         $imgId = $request->all()['entry'][0]['changes'][0]['value']['messages'][0]['image']['id'];
+        //         $imgMime = explode('/', $request->all()['entry'][0]['changes'][0]['value']['messages'][0]['image']['mime_type'])[1];
+        //         $filename = "{$imgId}.{$imgMime}";
+        //         $client = new \GuzzleHttp\Client();
+        //         $response  = $client->request('GET', "https://graph.facebook.com/v23.0/{$imgId}", [
+        //             'headers' => [
+        //                 'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
+        //             ]
+        //         ]);
+        //         $mediaData = json_decode($response->getBody(), true);
+        //         $imagem = $client->get($mediaData['url'], [
+        //             'headers' => [
+        //                 'Authorization' => 'Bearer ' . env('GRAPH_API_TOKEN'),
+        //             ],
+        //         ]);
+        //         Storage::disk('public')->put('whatsapp/'.$filename, $imagem->getBody());
+        //         $this->enviarMsg($business_phone_number_id, $number, "Link para o arquivo: https://evertonrs.com.br/storage/whatsapp/{$filename}");
+        //     } catch (\Throwable $th) {
+        //         ChatEnviaMensagem::dispatch($th);
+        //     }
+        // }
     }
 
     public function enviarMsgGemini($body) {

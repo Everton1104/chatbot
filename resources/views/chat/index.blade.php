@@ -83,6 +83,14 @@
                 $('#chat-messages').scrollTop($('#chat-messages')[0].scrollHeight);
             });
 
+            $('#message-input').on('keyup', (e) => {
+                if($('#message-input').val().length > 0){
+                    $('#send-button').css('background-color', '#05ad8e');
+                }else{
+                    $('#send-button').css('background-color', '#005c4b');
+                }
+            })
+
             // Handle send message
             $('#send-button').click(function() {
                 sendMessage();
@@ -96,9 +104,9 @@
 
             function sendMessage() {
                 const message = $('#message-input').val().trim();
-                if (message) {
+                if (message.length > 0) {
                     axios.post('chat-send', {
-                        message: message,
+                        message,
                     })
                     .then((res) => {
                         $('#message-input').val('');

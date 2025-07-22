@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('conversas', function (Blueprint $table) {
             $table->id();
+            $table->integer('user_id')->default(0);
             $table->string('numero');
             $table->string('nome')->default('Sem_Nome');
             $table->integer('status')->default(0);
@@ -20,9 +21,11 @@ return new class extends Migration
         });
         Schema::create('mensagens', function (Blueprint $table) {
             $table->id();
-            $table->string('numero_id');
+            $table->integer('conversa_id');
             $table->longText('msg');
+            $table->string('link')->nullable();
             $table->integer('tipo')->nullable();
+            $table->integer('status')->default(0);
             $table->timestamps();
         });
     }
