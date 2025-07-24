@@ -81,7 +81,7 @@ class WhatsappController extends Controller
                 }else{
                     //ROTA PADRÃO
 
-                    $this->enviarMsg($business_phone_number_id, $number,'echo -> ' . $msgTxt);
+                    
 
                 }
             }

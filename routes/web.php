@@ -23,22 +23,18 @@ Route::get('/', function () {
     return view('manutencao');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard')->middleware('auth');
-
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+    Route::resource('/chat', ChatController::class);
+});
 
 Route::get('politicabot', function () {
     return view('politicabot');
 });
 
-Route::post('/whatsapp/webhook', [WhatsappController::class, 'index']);
-
-Route::get('/whatsapp/webhook', [WhatsappController::class, 'show']);
-
-// Route::any('/whatsapp/webhook', [WhatsappController::class, 'teste']);
-
-Route::middleware('auth')->group(function () {
-    Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
-    Route::post('chat-send', [ChatController::class, 'EnviaMensagem'])->name('chat.send');
-});
+// WHATSAPP
+Route::post('/whatsapp/webhook', [WhatsappController::class, 'index']); // RECEBE MENSAGENS
+Route::get('/whatsapp/webhook', [WhatsappController::class, 'show']); // VALIDAÇÃO DO TOKEN
+// WHATSAPP
