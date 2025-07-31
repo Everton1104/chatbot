@@ -12,7 +12,8 @@ class MensagensModel extends Model
 
     // Define any fillable attributes
     protected $fillable = [
-        'conversa_id',
+        'conversa_id_to',
+        'conversa_id_from',
         'msg',
         'link',
         'tipo',

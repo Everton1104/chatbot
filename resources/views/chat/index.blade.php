@@ -127,6 +127,7 @@
                 z-index: 2;
                 left: 0px;
                 position: fixed;
+                cursor: pointer;
             }
             .msg-footer {
                 width: 100vw;
@@ -174,185 +175,43 @@
             <div class="sub-conversas-container">
                 <svg id="fechar-conversa" onclick="fecharConversa()" height="3rem" viewBox="0 -960 960 960" width="2rem" fill="#d2d2d2"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
                 <input type="text" id="pesquisar" class="form-control" placeholder="Pesquisar...">
-                <div class="my-3 conversa">
-                    <img class="img-perfil" src="storage/whatsapp/943647954475374.jpeg" alt="ft">
-                    <span class="nome-perfil">Fulano</span>
-                </div>
-                <div class="my-3 conversa">
-                    <img class="img-perfil" src="storage/whatsapp/728084869798626.jpeg" alt="ft">
-                    <span class="nome-perfil">Ciclano</span>
-                </div>
-                <div class="my-3 conversa">
-                    <img class="img-perfil" src="storage/whatsapp/700791209356909.jpeg" alt="ft">
-                    <span class="nome-perfil">Beltrano</span>
-                </div>
+                @foreach ($conversas as $index => $conversa)
+                    <div class="my-3 conversa" onclick="getMsgs({{$conversa->id}})">
+                        <img class="img-perfil" src="storage/whatsapp/{{ $conversa->foto ?? '0.jpg' }}" alt="ft">
+                        <span class="nome-perfil">
+                            {{ $conversa->name??$conversa->nome }}
+                            <br>
+                            {{ '('.substr($conversa->numero??'', 2, 2).') '.substr($conversa->numero??'', 4, 5).'-'.substr($conversa->numero??'', 9) }}
+                        </span>
+                    </div>
+                @endforeach
             </div>
         </div>
         <div class="msgs-container">
             <div class="msg-header" onclick="fecharConversa()">
                 <div class="d-flex align-items-center">
-                    <img class="img-perfil col-1" src="storage/whatsapp/700791209356909.jpeg" alt="ft">
-                    <h2>NOME</h2>
+                    <img id="img-perfil-header" class="img-perfil d-none" src="storage/whatsapp/0.jpg" alt="ft">
+                    <h2 id="nome-header">Selecione uma conversa</h2>
                 </div>
             </div>
             <div style="height: 100px;"></div>
-            {{-- modelos --}}
-            <div class="m-3 row d-flex justify-content-start">
-                <div class="col-auto msg-receive">
-                    <div class="msg-text col-12">Mensagem de texto recebida</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
+            {{-- mensagens --}}
+            <div id="msg-inicio" class="justify-content-center">
+                <h1 class="text-center">Bem vindo ao Chat</h1>
+                <h2 class="text-center">{{ Auth::user()->name }}</h2>
             </div>
-            <div class="m-3 row d-flex justify-content-end">
-                <div class="col-auto msg-send">
-                    <div class="msg-text col-12">Mensagem de texto enviada</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
+            <div id="lista-msgs">
             </div>
-            <div class="m-3 row d-flex justify-content-end">
-                <div class="col-auto msg-send">
-                    <div class="msg-text col-12">
-                        <a href="storage/whatsapp/700791209356909.jpeg" target="_blank"><img class="img-fluid" style="max-width: 25vw; max-height: 25vw" src="storage/whatsapp/700791209356909.jpeg" alt="teste"></a>
-                        <div class="msg-text col-12">Descrição imagem enviada</div>
-                    </div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-start">
-                <div class="col-auto msg-receive">
-                    <div class="msg-text col-12">
-                        <a href="storage/whatsapp/1960125011428470.jpeg" target="_blank"><img class="img-fluid" style="max-width: 25vw; max-height: 25vw" src="storage/whatsapp/1960125011428470.jpeg" alt="teste"></a>
-                        <div class="msg-text col-12">Descrição imagem recebida</div>
-                    </div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-end">
-                <div class="col-auto msg-send">
-                    <div class="msg-text col-12">
-                        <audio class="audio-player" controls>
-                            <source src="/storage/spiderman.mp3?{{time()}}" type="audio/mpeg">
-                            Audio indisponivel em seu navegador.
-                        </audio>
-                    </div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-start">
-                <div class="col-auto msg-receive">
-                    <div class="msg-text col-12">
-                        <audio class="audio-player" controls>
-                            <source src="/storage/spiderman.mp3?{{time()}}" type="audio/mpeg">
-                            Audio indisponivel em seu navegador.
-                        </audio>
-                    </div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            {{-- teste --}}
-            <div class="m-3 row d-flex justify-content-start">
-                <div class="col-auto msg-receive">
-                    <div class="msg-text col-12">Mensagem de texto recebida</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-start">
-                <div class="col-auto msg-receive">
-                    <div class="msg-text col-12">Mensagem de texto recebida</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-start">
-                <div class="col-auto msg-receive">
-                    <div class="msg-text col-12">Mensagem de texto recebida</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-start">
-                <div class="col-auto msg-receive">
-                    <div class="msg-text col-12">Mensagem de texto recebida</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-start">
-                <div class="col-auto msg-receive">
-                    <div class="msg-text col-12">Mensagem de texto recebida</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-start">
-                <div class="col-auto msg-receive">
-                    <div class="msg-text col-12">Mensagem de texto recebida</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-end">
-                <div class="col-auto msg-send">
-                    <div class="msg-text col-12">Mensagem de texto enviada enviada enviada enviada enviada enviada enviada enviada enviadaenviadaenviadaenviada enviada enviada enviada enviadaenviada enviada</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-end">
-                <div class="col-auto msg-send">
-                    <div class="msg-text col-12">Mensagem de texto enviada enviada enviada enviada enviada enviada enviada enviada enviadaenviadaenviadaenviada enviada enviada enviada enviadaenviada enviada</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-end">
-                <div class="col-auto msg-send">
-                    <div class="msg-text col-12">Mensagem de texto enviada enviada enviada enviada enviada enviada enviada enviada enviadaenviadaenviadaenviada enviada enviada enviada enviadaenviada enviada</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-end">
-                <div class="col-auto msg-send">
-                    <div class="msg-text col-12">Mensagem de texto enviada enviada enviada enviada enviada enviada enviada enviada enviadaenviadaenviadaenviada enviada enviada enviada enviadaenviada enviada</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-end">
-                <div class="col-auto msg-send">
-                    <div class="msg-text col-12">Mensagem de texto enviada enviada enviada enviada enviada enviada enviada enviada enviadaenviadaenviadaenviada enviada enviada enviada enviadaenviada enviada</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-end">
-                <div class="col-auto msg-send">
-                    <div class="msg-text col-12">Mensagem de texto enviada enviada enviada enviada enviada enviada enviada enviada enviadaenviadaenviadaenviada enviada enviada enviada enviadaenviada enviada</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="m-3 row d-flex justify-content-end">
-                <div class="col-auto msg-send">
-                    <div class="msg-text col-12">Mensagem de texto enviada enviada enviada enviada enviada enviada enviada enviada enviadaenviadaenviadaenviada enviada enviada enviada enviadaenviada enviadaenviadaenv
-                        iadaenviada enviadaenviada enviadaenviada enviadaenviada enviadaenviada enviadaenviada enviadaenviada enviadaenviada enviadaenviada enviadaenviada enviadaenviada enviadaenviada  enviada</div>
-                    <span class="msg-hora float-end">00:00</span>
-                </div>
-            </div>
-            <div class="msg-footer d-flex">
-                <input type="text" class="form-control me-2" placeholder="Digite sua mensagem...">
-                <button class="btn btn-success">
+            <div class="msg-footer d-none d-flex">
+                <input type="text" id="msg-text" class="form-control me-2" placeholder="Digite sua mensagem...">
+                <button class="btn btn-success" onclick="enviaMsg()">
                     <svg height="28px" viewBox="0 -960 960 960" width="30px" fill="#0a0a0a"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
                 </button>
             </div>
         </div>
     </div>
+@endsection
 
-    <script>
-        conversas = true
-        function fecharConversa(){
-            if(conversas){
-                $('.conversas-container').css('display', 'block');
-                $('.msgs-container').css('display', 'none');
-                $('.conversas-container').css('width', '100vw');
-                $('.conversas-container').css('transform', 'translateX(0vw)');
-            }else{
-                $('.conversas-container').css('display', 'none');
-                $('.msgs-container').css('display', 'block');
-                $('.conversas-container').css('width', '30vw');
-                $('.conversas-container').css('transform', 'translateX(-100vw)');
-            }
-            conversas = !conversas
-        }
-    </script>
+@section('scriptEnd')
+    @include('chat.js')
 @endsection

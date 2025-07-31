@@ -24,10 +24,12 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
+    Route::get('dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
-    Route::resource('/chat', ChatController::class);
+    Route::resource('chat', ChatController::class);
+    Route::post('loadMsgs', [ChatController::class, 'loadMsgs'] )->name('loadMsgs');
+    Route::post('enviaMsg', [ChatController::class, 'enviaMsg'] )->name('enviaMsg');
 });
 
 Route::get('politicabot', function () {

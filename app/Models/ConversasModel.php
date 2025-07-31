@@ -15,6 +15,7 @@ class ConversasModel extends Model
         'user_id',
         'numero',
         'nome',
+        'foto',
         'status'
     ];
 
