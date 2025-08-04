@@ -175,16 +175,14 @@
             <div class="sub-conversas-container">
                 <svg id="fechar-conversa" onclick="fecharConversa()" height="3rem" viewBox="0 -960 960 960" width="2rem" fill="#d2d2d2"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
                 <input type="text" id="pesquisar" class="form-control" placeholder="Pesquisar...">
-                @foreach ($conversas as $index => $conversa)
-                    <div class="my-3 conversa" onclick="getMsgs({{$conversa->id}})">
-                        <img class="img-perfil" src="storage/whatsapp/{{ $conversa->foto ?? '0.jpg' }}" alt="ft">
+                <div id="lista-conversas">
+                    <div class="my-3 conversa">
+                        <img class="img-perfil" src="storage/whatsapp/0.jpg" alt="ft">
                         <span class="nome-perfil">
-                            {{ $conversa->name??$conversa->nome }}
-                            <br>
-                            {{ '('.substr($conversa->numero??'', 2, 2).') '.substr($conversa->numero??'', 4, 5).'-'.substr($conversa->numero??'', 9) }}
+                            .
                         </span>
                     </div>
-                @endforeach
+                </div>
             </div>
         </div>
         <div class="msgs-container">
@@ -203,7 +201,7 @@
             <div id="lista-msgs">
             </div>
             <div class="msg-footer d-none d-flex">
-                <input type="text" id="msg-text" class="form-control me-2" placeholder="Digite sua mensagem...">
+                <textarea type="text" style="height: 40px" id="msg-text" class="form-control me-2" placeholder="Digite sua mensagem..."></textarea>
                 <button class="btn btn-success" onclick="enviaMsg()">
                     <svg height="28px" viewBox="0 -960 960 960" width="30px" fill="#0a0a0a"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
                 </button>

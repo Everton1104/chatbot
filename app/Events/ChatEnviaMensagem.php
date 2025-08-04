@@ -26,6 +26,6 @@ class ChatEnviaMensagem implements ShouldBroadcastNow
     }
     public function broadcastWith(): array
     {
-        return ['message' => $this->message, 'hora' => date('H:i'), 'user_id' => Auth::user()->id??0];
+        return ['message' => $this->message];
     }
 }

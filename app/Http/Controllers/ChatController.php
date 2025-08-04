@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ChatEnviaMensagem;
 use App\Models\ConversasModel;
 use App\Models\MensagensModel;
 use App\Models\User;
@@ -19,44 +20,56 @@ class ChatController extends Controller
 
     public function getMsgs($id = 0)
     {
-        $user_id = ConversasModel::where('user_id', Auth::user()->id)->first();
+        // carregar msgs de conversa selecionada
         if($id > 0){
             $conversa = ConversasModel::find($id);
-            $conversa['msgs'] = MensagensModel::when(function ($query) use ($user_id, $id) {
-                $query->where(function ($query) use ($user_id , $id) {
-                    $query->where([['conversa_id_from', '=', $id], ['conversa_id_to', '=', $user_id->id]]);
-                })->orWhere(function ($query) use ($user_id, $id) {
-                    $query->where([['conversa_id_from', '=', $user_id->id], ['conversa_id_to', '=', $id]]);
+            $mensagens = MensagensModel::where(function($query) use ($id) {
+                $query->where([
+                    ['conversa_id_from', '=', $id],
+                    ['conversa_id_to', '=', Auth::user()->departamento_id],
+                    ['tipo', '>=', 4],
+                    ['tipo', '<=', 6]
+                ])->orWhere(function($query2) use ($id) { // usei o query2 para colocar o or entre os dois where
+                    $query2->where([
+                        ['conversa_id_from', '=', Auth::user()->departamento_id],
+                        ['conversa_id_to', '=', $id],
+                        ['tipo', '>=', 4],
+                        ['tipo', '<=', 6]
+                    ]);
                 });
-                $query->where('tipo', '>', 3);
-            })->orderBy('created_at', 'DESC')->get();
-            return $conversa;
+            })->get();
+
+            $response = $conversa->toArray();
+            $response['msgs'] = $mensagens->toArray();
+
+            return $response;
         }
-        if($user_id){
-            $conversas = ConversasModel::find($user_id->id)
-                ->leftJoin('users', 'conversas.user_id', '=', 'users.id')
-                ->select('users.*', 'conversas.*')
-                ->orderBy('conversas.created_at', 'desc')
-                ->get();
-                return $conversas;
-        }
-        return response()->json(['error' => 'Conversas não encontradas'], 400);
+        // carregar todas as conversas sem as msgs
+        $conversas = MensagensModel::where([['conversa_id_to', '=', Auth::user()->departamento_id],['tipo', '>=', 4],['tipo', '<=', 6]])
+            ->leftJoin('conversas', 'conversas.id', '=', 'mensagens.conversa_id_from')
+            ->select('conversas.id', 'conversas.numero', 'conversas.nome', 'conversas.foto')
+            ->groupBy('conversas.id', 'conversas.numero', 'conversas.nome', 'conversas.foto')
+            ->orderBy('conversas.created_at', 'desc')
+            ->get();
+        return $conversas;
     }
 
     public function enviaMsg(Request $request)
     {
-        $user_id = ConversasModel::where('user_id', Auth::user()->id)->first();
         // depois colocar tipo 5 e 6
         $request->validate([
             'msg' => 'required',
             'id' => 'required'
         ]);
         MensagensModel::create([
-            'msg' => $request->msg,
-            'conversa_id_from' => $user_id->id,
+            'msg' => 'Mensagem de '.Auth::user()->name.':<br><br>'.$request->msg,
+            'conversa_id_from' => Auth::user()->departamento_id,
             'conversa_id_to' => $request->id,
             'tipo' => 4
         ]);
+        // depois verificar se ao enviar msg todos os canais websocket serao atualizados
+        // qualquer coisa configura-los por id de departamento para evitar atualizar tudo
+        ChatEnviaMensagem::dispatch($request->id);
         return $this->getMsgs($request->id);
     }
 
@@ -66,5 +79,36 @@ class ChatController extends Controller
             'id' => 'required'
         ]);
         return $this->getMsgs($request->id);
+    }
+
+    public function getConversas()
+    {
+        $conversas = MensagensModel::where([
+                ['conversa_id_to', '=', Auth::user()->departamento_id],
+                ['tipo', '>=', 4],
+                ['tipo', '<=', 6],
+            ])
+            ->leftJoin('conversas', 'conversas.id', '=', 'mensagens.conversa_id_from')
+            ->select('conversas.id', 'conversas.numero', 'conversas.nome', 'conversas.foto')
+            ->groupBy('conversas.id', 'conversas.numero', 'conversas.nome', 'conversas.foto')
+            ->orderBy('conversas.created_at', 'desc')
+            ->get();
+        return $conversas;
+    }
+
+    public function procurarConversa(Request $request)
+    {
+        $conversas = MensagensModel::where([
+                ['conversa_id_to', '=', Auth::user()->departamento_id],
+                ['tipo', '>=', 4],
+                ['tipo', '<=', 6],
+                ['nome', 'like', '%'.$request->busca.'%'],
+            ])
+            ->leftJoin('conversas', 'conversas.id', '=', 'mensagens.conversa_id_from')
+            ->select('conversas.id', 'conversas.numero', 'conversas.nome', 'conversas.foto')
+            ->groupBy('conversas.id', 'conversas.numero', 'conversas.nome', 'conversas.foto')
+            ->orderBy('conversas.created_at', 'desc')
+            ->get();
+        return $conversas;
     }
 }

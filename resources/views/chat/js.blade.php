@@ -24,14 +24,15 @@
             $('.msg-footer').addClass('d-none');
             $('#img-perfil-header').addClass('d-none');
             $('#nome-header').text('Selecione uma conversa');
+            $('#lista-msgs').html('');
             fecharConversa();
+            id_conversa = 0
         }
     })
 
     let id_conversa = 0
     function getMsgs(id)
     {
-        if(id == id_conversa) return;
         axios.post('loadMsgs', {id})
             .then((res) => {
                 item = res.data
@@ -49,15 +50,16 @@
                 }else{
                     $('#nome-header').text(item.nome);
                 }
-                item.msgs.forEach(msgs => {
-                    // tipos de msg 0 = boas vindas, 1 = bot, 2 = user, 3 = troca nome, 4 = texto, 5 = audio, 6 = imagem
+                Object.entries(item.msgs).forEach(([key, msgs]) => {
+                //item.msgs.forEach(msgs => {
+                    // tipos de msg 0 = boas vindas, 1 = bot, 2 = user, 3 = troca nome, 4 = texto, 5 = audio, 6 = imagem, 7 = Procurar Congr
                     switch (msgs.tipo) {
                         case 4:
-                            if(msgs.conversa_id_to == item.id) {
+                            if(msgs.conversa_id_to == id) {
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-end">
                                         <div class="col-auto msg-send">
-                                            <div class="msg-text col-12">${msgs.msg}</div>
+                                            <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <span class="msg-hora float-end">${new Date(msgs.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                                         </div>
                                     </div>
@@ -66,7 +68,7 @@
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-start">
                                         <div class="col-auto msg-receive">
-                                            <div class="msg-text col-12">${msgs.msg}</div>
+                                            <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <span class="msg-hora float-end">${new Date(msgs.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                                         </div>
                                     </div>
@@ -74,7 +76,7 @@
                             }
                             break;
                         case 5:
-                            if(msgs.conversa_id_to == item.id) {
+                            if(msgs.conversa_id_to == id) {
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-end">
                                         <div class="col-auto msg-send">
@@ -105,7 +107,7 @@
                             }
                             break;
                         case 6:
-                            if(msgs.conversa_id_to == item.id) {
+                            if(msgs.conversa_id_to == id) {
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-end">
                                         <div class="col-auto msg-send">
@@ -140,18 +142,18 @@
             });
     }
 
-
     $('#msg-text').on('keyup', (e) => {
         if (e.key === 'Enter') {
             if($('#msg-text').val() == '') return;
             enviaMsg();
+            getMsgs(id_conversa)
         }
     })
-    function enviaMsg(){
+    function enviaMsg()
+    {
         let msg = $('#msg-text').val();
         axios.post('enviaMsg', {msg, id: id_conversa})
             .then((res) => {
-                this.getMsgs(id_conversa)
                 $('#msg-text').val('');
             })
             .catch((err) => {
@@ -159,4 +161,65 @@
             });
     }
 
+    let searchTimeout;
+    $('#pesquisar').on('keyup', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            pesquisar();
+        }, 2000);
+    });
+    function pesquisar() {
+        let busca = $('#pesquisar').val();
+        axios.post('procurarConversa', {busca})
+            .then((res) => {
+                $('#lista-conversas').html('');
+                res.data.forEach($conversa => {
+                    $('#lista-conversas').append(`
+                        <div class="my-3 conversa" onclick="getMsgs(${$conversa.id})">
+                            <img class="img-perfil" src="storage/whatsapp/${ $conversa.foto ?? '0.jpg' }" alt="ft">
+                            <span class="nome-perfil">
+                                ${ $conversa.name??$conversa.nome }
+                                <br>
+                                ${ $conversa.numero ? '(' + $conversa.numero.substring(2,4) + ') ' + $conversa.numero.substring(4,9) + '-' + $conversa.numero.substring(9) : '' }
+                            </span>
+                        </div>
+                    `);
+                });
+            })
+            .catch((err) => {
+                console.log('Erro axios ->'+err);
+            });
+    }
+
+    function getConversas()
+    {
+        axios.post('getConversas')
+            .then((res) => {
+                $('#lista-conversas').html('');
+                res.data.forEach($conversa => {
+                    $('#lista-conversas').append(`
+                        <div class="my-3 conversa" onclick="getMsgs(${$conversa.id})">
+                            <img class="img-perfil" src="storage/whatsapp/${ $conversa.foto ?? '0.jpg' }" alt="ft">
+                            <span class="nome-perfil">
+                                ${ $conversa.name??$conversa.nome }
+                                <br>
+                                ${ $conversa.numero ? '(' + $conversa.numero.substring(2,4) + ') ' + $conversa.numero.substring(4,9) + '-' + $conversa.numero.substring(9) : '' }
+                            </span>
+                        </div>
+                    `);
+                });
+            })
+            .catch((err) => {
+                console.log('Erro axios ->'+err);
+            });
+    }
+
+    $(document).ready(() => {
+        getConversas()
+        window.Echo.channel('chat').listen('.chat.message', (data) => {
+            if(id_conversa == data.message){
+                getMsgs(id_conversa)
+            }
+        });
+    });
 </script>

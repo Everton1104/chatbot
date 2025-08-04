@@ -12,9 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('conversas', function (Blueprint $table) {
-            $table->id();
-            $table->integer('user_id')->default(0);
-            $table->string('numero')->nullable();;
+            $table->id()->startingValue(50); // a partir de 50 pois conflita com o id da tabela departamentos
+            $table->string('numero')->nullable();
             $table->string('nome')->default('Sem_Nome');
             $table->string('foto')->default('0.jpg');
             $table->integer('status')->default(0);
@@ -30,6 +29,15 @@ return new class extends Migration
             $table->integer('status')->default(0);
             $table->timestamps();
         });
+        Schema::create('users_departamentos', function (Blueprint $table) {
+            $table->id();
+            $table->string('descDepartamento')->nullable();
+            $table->integer('status')->default(0);
+            $table->timestamps();
+        });
+        Schema::table('users', function (Blueprint $table) {
+            $table->integer('departamento_id')->nullable()->after('password');
+        });
     }
 
     /**
@@ -39,5 +47,9 @@ return new class extends Migration
     {
         Schema::dropIfExists('conversas');
         Schema::dropIfExists('mensagens');
+        Schema::dropIfExists('users_departamentos');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('departamento_id');
+        });
     }
 };

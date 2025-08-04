@@ -4,19 +4,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ConversasModel extends Model
+class DepartamentosModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'conversas';
+    protected $table = 'users_departamentos';
 
-    // Define any fillable attributes
     protected $fillable = [
-        'numero',
-        'nome',
-        'foto',
-        'status'
+        'descDepartamento',
+        'status',
     ];
-
 }
 

@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('chat', ChatController::class);
     Route::post('loadMsgs', [ChatController::class, 'loadMsgs'] )->name('loadMsgs');
     Route::post('enviaMsg', [ChatController::class, 'enviaMsg'] )->name('enviaMsg');
+    Route::post('procurarConversa', [ChatController::class, 'procurarConversa'] )->name('procurarConversa');
+    Route::post('getConversas', [ChatController::class, 'getConversas'] )->name('getConversas');
 });
 
 Route::get('politicabot', function () {
