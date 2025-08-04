@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 class ChatEnviaMensagem implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-    public function __construct(public string $message){}
+    public function __construct(public string $message = "websocket_disparado"){}
     public function broadcastOn(): array
     {
         return [new Channel('chat')];

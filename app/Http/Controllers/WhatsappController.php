@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 class WhatsappController extends Controller
 {
     // tipos de msg 0 = boas vindas, 1 = bot, 2 = user, 3 = troca nome, 4 = texto, 5 = audio, 6 = imagem, 7 = Procurar Congr
+    // status de conversas 0 = padrao, 1 = dep ti
     public function show()
     {
         $request = Request::capture();
@@ -53,60 +54,64 @@ class WhatsappController extends Controller
                         'tipo' => 0, // boas vindas
                     ]);
                 }
-            }else{
+            }else{ // Tratamento das mensagens de texto
                 $ultimaMsg = MensagensModel::where('conversa_id_to','=',$conversa->id)->orderBy('created_at', 'desc')->first();
-                if($ultimaMsg->tipo == 0){ // se a ultima mensagem é a de boas vindas
-                    if($msgSimNao == 'simNomeCorreto'){ // se o nome esta correto.
+                switch ($ultimaMsg->tipo) {
+                    case '0':
+                            if($msgSimNao == 'simNomeCorreto'){ // se o nome esta correto.
+                            $msg = "Certo ".$conversa->nome.", vamos começar.";
+                            $this->enviarMsg($business_phone_number_id, $number,$msg);
+                            MensagensModel::create([
+                                'conversa_id_to' => $conversa->id, 
+                                'conversa_id_from' => 0, 
+                                'msg' => 'Nome confirmado',
+                                'tipo' => 1, // bot
+                            ]);
+                        }else{
+                            $msg = "Qual é seu nome?";
+                            $this->enviarMsg($business_phone_number_id, $number,$msg);
+                            MensagensModel::create([
+                                'conversa_id_to' => $conversa->id, 
+                                'conversa_id_from' => 0,
+                                'msg' => 'Alterar nome',
+                                'tipo' => 3, // alterar nome
+                            ]);
+                            return response()->json([], 200);
+                        }
+                        break;
+                    case '3':
+                        $conversa->update(['nome' => $msgTxt]);
                         $msg = "Certo ".$conversa->nome.", vamos começar.";
                         $this->enviarMsg($business_phone_number_id, $number,$msg);
                         MensagensModel::create([
                             'conversa_id_to' => $conversa->id, 
-                            'conversa_id_from' => 0, 
-                            'msg' => 'Nome confirmado',
+                            'conversa_id_from' => 0,
+                            'msg' => 'Nome alterado',
                             'tipo' => 1, // bot
                         ]);
-                    }else{
-                        $msg = "Qual é seu nome?";
-                        $this->enviarMsg($business_phone_number_id, $number,$msg);
+                        break;
+                    case '7':
+                        $congrs = CongrsModel::where([['id','!=','0'],['id','!=','55'],['situacao','1'],['descCongr','like','%'.$msgTxt.'%']])->take(9)->get();
+                        $lista =  [];
+                        foreach ($congrs as $congr) {
+                            $lista[] = [
+                                'id' => 'congr'.$congr->id,
+                                'title' => $congr->descCongr,
+                            ];
+                        }
+                        $lista[] = [
+                            'id' => 'congr0',
+                            'title' => 'Nenhuma das opções',
+                        ];
+                        $this->enviarMsgLista($business_phone_number_id, $number, 'Escolha uma das congregações encontradas:', $lista);
                         MensagensModel::create([
                             'conversa_id_to' => $conversa->id, 
                             'conversa_id_from' => 0,
-                            'msg' => 'Alterar nome',
-                            'tipo' => 3, // alterar nome
+                            'msg' => 'Congregações encontradas',
+                            'tipo' => 1, // bot
                         ]);
                         return response()->json([], 200);
-                    }
-                }elseif($ultimaMsg->tipo == 3){// pedido de alteracao de nome.
-                    $conversa->update(['nome' => $msgTxt]);
-                    $msg = "Certo ".$conversa->nome.", vamos começar.";
-                    $this->enviarMsg($business_phone_number_id, $number,$msg);
-                    MensagensModel::create([
-                        'conversa_id_to' => $conversa->id, 
-                        'conversa_id_from' => 0,
-                        'msg' => 'Nome alterado',
-                        'tipo' => 1, // bot
-                    ]);
-                }elseif($ultimaMsg->tipo == 7){// procurar congregacao.
-                    $congrs = CongrsModel::where([['id','!=','0'],['id','!=','55'],['situacao','1'],['descCongr','like','%'.$msgTxt.'%']])->take(9)->get();
-                    $lista =  [];
-                    foreach ($congrs as $congr) {
-                        $lista[] = [
-                            'id' => 'congr'.$congr->id,
-                            'title' => $congr->descCongr,
-                        ];
-                    }
-                    $lista[] = [
-                        'id' => 'congr0',
-                        'title' => 'Nenhuma das opções',
-                    ];
-                    $this->enviarMsgLista($business_phone_number_id, $number, 'Escolha uma das congregações encontradas:', $lista);
-                    MensagensModel::create([
-                        'conversa_id_to' => $conversa->id, 
-                        'conversa_id_from' => 0,
-                        'msg' => 'Congregações encontradas',
-                        'tipo' => 1, // bot
-                    ]);
-                    return response()->json([], 200);
+                        break;
                 }
                 $this->rotaPadrao($request);
             }
@@ -118,7 +123,6 @@ class WhatsappController extends Controller
         }
     }
 
-    // Rotas com listas ou botoes
     public function rotaPadrao(Request $request) {
         $business_phone_number_id = $request['entry'][0]['changes'][0]['value']['metadata']['phone_number_id']??0;
         $nome = $request['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name']??'';
@@ -130,87 +134,111 @@ class WhatsappController extends Controller
         $conversa = ConversasModel::where('numero','=',$number)->first();
         $msgs = MensagensModel::where('conversa_id_to','=',$conversa->id)->orderBy('created_at', 'desc')->take(10)->get();
 
-        // Respostas de botoes sim ou nao
-        if(!empty($msgSimNao)){
-            if($msgSimNao != 'simNomeCorreto'){
-                $msg = "opt sim/nao";
-                $this->enviarMsg($business_phone_number_id, $number,$msg);
-            }
-        }
+        switch ($conversa->status) {
+            case 0:
+                // Respostas de botoes sim ou nao
+                if(!empty($msgSimNao)){
+                    if($msgSimNao != 'simNomeCorreto'){// pula a primeira mensagem de boas vindas
+                        switch ($msgSimNao) {
+                            case 'simIniciarConversaTI':
+                                $msg = "iniciando Conversa com dep TI, em breve um de nossos técnicos entrará em contato.";
+                                $this->enviarMsg($business_phone_number_id, $number,$msg);
+                                ConversasModel::find($conversa->id)->update(['status' => 1]);
+                                MensagensModel::create([
+                                    'conversa_id_to' => 2, 
+                                    'conversa_id_from' => $conversa->id,
+                                    'msg' => 'Nova solicitação para o departamento de TI',
+                                    'tipo' => 4,
+                                ]);
+                                break;
+                        }
+                        return;    
+                    }
+                }
 
-        // Respostas de listas
-        if(!empty($msgLista)){
-            switch ($msgLista) {
-                // Troca do nome
-                    case 'alterarNome':
-                        $msg = "Qual é seu nome?";
-                        $this->enviarMsg($business_phone_number_id, $number,$msg);
-                        MensagensModel::create([
-                            'conversa_id_to' => $conversa->id, 
-                            'conversa_id_from' => 0,
-                            'msg' => $msg,
-                            'tipo' => 3, // alterar nome
-                        ]);
-                        break;
-                // Troca do nome
-
-                //Solicitações
-                    case 'solicitacoes':
-                        $lista =  [
-                            [
-                                'id' => 'ti',
-                                'title' => 'Departamento de TI',
-                                'description' =>'Som e mídia'
-                            ],
-                            [
-                                'id' => 'compras',
-                                'title' => 'Departamento de Compras',
-                                'description' =>'Produtos de limpesa, etc.'
-                            ],
-                        ];
-                        $this->enviarMsgLista($business_phone_number_id, $number, 'Escolha um departamento:', $lista);
-                        break;
-                        //TI
-                        case 'ti':
-                            $msg = "Qual é a sua congregação?";
-                            $this->enviarMsg($business_phone_number_id, $number,$msg);
-                            MensagensModel::create([
-                                'conversa_id_to' => $conversa->id, 
-                                'conversa_id_from' => 0,
-                                'msg' => 'Procurar congregação...',
-                                'tipo' => 7, // congr
-                            ]);
-                            break;
-                            //Congr selecionada
-                            case 'congr0':
-                                $msg = "Procurar congregação novamente:";
+                // Respostas de listas
+                if(!empty($msgLista)){
+                    switch ($msgLista) {
+                        // Troca do nome
+                            case 'alterarNome':
+                                $msg = "Qual é seu nome?";
                                 $this->enviarMsg($business_phone_number_id, $number,$msg);
                                 MensagensModel::create([
                                     'conversa_id_to' => $conversa->id, 
                                     'conversa_id_from' => 0,
-                                    'msg' => 'Procurar congregação...',
-                                    'tipo' => 7, // congr
+                                    'msg' => $msg,
+                                    'tipo' => 3, // alterar nome
                                 ]);
                                 break;
-                //Solicitações
-            }
-            return;
-        }else{
-            // MENU INICIAL
-            $lista =  [
-                [
-                    'id' => 'solicitacoes',
-                    'title' => 'Solicitações',
-                    'description' =>'Solicitações para departamentos da igreja.'
-                ],
-                [
-                    'id' => 'alterarNome',
-                    'title' => 'Alterar meu nome',
-                    'description' =>'Nome atual: ' . $conversa->nome
-                ],
-            ];
-            $this->enviarMsgLista($business_phone_number_id, $number, 'Escolha uma opção:', $lista);
+                        // Troca do nome
+
+                        //Solicitações
+                            case 'solicitacoes':
+                                $lista =  [
+                                    [
+                                        'id' => 'ti',
+                                        'title' => 'Departamento de TI',
+                                        'description' =>'Som e mídia'
+                                    ],
+                                    [
+                                        'id' => 'compras',
+                                        'title' => 'Departamento de Compras',
+                                        'description' =>'Produtos de limpesa, etc.'
+                                    ],
+                                ];
+                                $this->enviarMsgLista($business_phone_number_id, $number, 'Escolha um departamento:', $lista);
+                                break;
+                                //TI
+                                case 'ti':
+                                    $msg = "Deseja iniciar uma conversa com o departamento de TI?";
+                                    $this->enviarMsgSimNao($business_phone_number_id, $number, $msg, 'IniciarConversaTI');
+                                    MensagensModel::create([
+                                        'conversa_id_to' => $conversa->id, 
+                                        'conversa_id_from' => 0,
+                                        'msg' => 'Iniciar conversa com TI?',
+                                        'tipo' => 1,
+                                    ]);
+                                    break;
+                                    // $msg = "Qual é a sua congregação?";
+                                    // $this->enviarMsg($business_phone_number_id, $number,$msg);
+                                    // MensagensModel::create([
+                                    //     'conversa_id_to' => $conversa->id, 
+                                    //     'conversa_id_from' => 0,
+                                    //     'msg' => 'Procurar congregação...',
+                                    //     'tipo' => 7, // congr
+                                    // ]);
+                                    // break;
+                        //Solicitações
+                    }
+                    return;
+                }else{
+                    // MENU INICIAL
+                    $lista =  [
+                        [
+                            'id' => 'solicitacoes',
+                            'title' => 'Solicitações',
+                            'description' =>'Solicitações para departamentos da igreja.'
+                        ],
+                        [
+                            'id' => 'alterarNome',
+                            'title' => 'Alterar meu nome',
+                            'description' =>'Nome atual: ' . $conversa->nome
+                        ],
+                    ];
+                    $this->enviarMsgLista($business_phone_number_id, $number, 'Escolha uma opção:', $lista);
+                }
+                break;
+            case 1: // TI
+                MensagensModel::create([
+                    'msg' => $msgTxt,
+                    'conversa_id_from' => $conversa->id,
+                    'conversa_id_to' => 2,
+                    'tipo' => 4
+                ]);
+                ChatEnviaMensagem::dispatch($conversa->id);
+                break;
         }
+        return;
     }
 
     public function enviarMsgGemini($body) {

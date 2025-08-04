@@ -67,6 +67,7 @@ class ChatController extends Controller
             'conversa_id_to' => $request->id,
             'tipo' => 4
         ]);
+        WhatsappController::enviarMsg(env('PHONE_NUMBER_ID'), ConversasModel::find($request->id)->numero, 'Mensagem de '.Auth::user()->name.":\r\n\r\n".$request->msg);
         // depois verificar se ao enviar msg todos os canais websocket serao atualizados
         // qualquer coisa configura-los por id de departamento para evitar atualizar tudo
         ChatEnviaMensagem::dispatch($request->id);

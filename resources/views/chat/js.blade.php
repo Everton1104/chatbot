@@ -196,18 +196,20 @@
         axios.post('getConversas')
             .then((res) => {
                 $('#lista-conversas').html('');
-                res.data.forEach($conversa => {
-                    $('#lista-conversas').append(`
-                        <div class="my-3 conversa" onclick="getMsgs(${$conversa.id})">
-                            <img class="img-perfil" src="storage/whatsapp/${ $conversa.foto ?? '0.jpg' }" alt="ft">
-                            <span class="nome-perfil">
-                                ${ $conversa.name??$conversa.nome }
-                                <br>
-                                ${ $conversa.numero ? '(' + $conversa.numero.substring(2,4) + ') ' + $conversa.numero.substring(4,9) + '-' + $conversa.numero.substring(9) : '' }
-                            </span>
-                        </div>
-                    `);
-                });
+                if(res.data.length > 0) {
+                    res.data.forEach($conversa => {
+                        $('#lista-conversas').append(`
+                            <div class="my-3 conversa" onclick="getMsgs(${$conversa.id})">
+                                <img class="img-perfil" src="storage/whatsapp/${ $conversa.foto ?? '0.jpg' }" alt="ft">
+                                <span class="nome-perfil">
+                                    ${ $conversa.name??$conversa.nome }
+                                    <br>
+                                    ${ $conversa.numero ? '(' + $conversa.numero.substring(2,4) + ') ' + $conversa.numero.substring(4,9) + '-' + $conversa.numero.substring(9) : '' }
+                                </span>
+                            </div>
+                        `);
+                    });
+                }
             })
             .catch((err) => {
                 console.log('Erro axios ->'+err);
