@@ -61,7 +61,7 @@
                                     <div class="m-3 row d-flex justify-content-end">
                                         <div class="col-auto msg-send">
                                             <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
-                                            <span class="msg-hora float-end">${new Date(msgs.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
                                     </div>
                                 `);
@@ -70,7 +70,7 @@
                                     <div class="m-3 row d-flex justify-content-start">
                                         <div class="col-auto msg-receive">
                                             <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
-                                            <span class="msg-hora float-end">${new Date(msgs.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
                                     </div>
                                 `);
@@ -87,7 +87,7 @@
                                                     Audio indisponivel em seu navegador.
                                                 </audio>
                                             </div>
-                                            <span class="msg-hora float-end">${new Date(msgs.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
                                     </div>
                                 `);
@@ -101,7 +101,7 @@
                                                     Audio indisponivel em seu navegador.
                                                 </audio>
                                             </div>
-                                            <span class="msg-hora float-end">${new Date(msgs.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
                                     </div>
                                 `);
@@ -113,10 +113,10 @@
                                     <div class="m-3 row d-flex justify-content-end">
                                         <div class="col-auto msg-send">
                                             <div class="msg-text col-12">
-                                                <a href="storage/whatsapp/${msgs.link}" target="_blank"><img class="img-fluid" style="max-width: 25vw; max-height: 25vw" src="storage/whatsapp/700791209356909.jpeg" alt="teste"></a>
+                                                <a href="storage/whatsapp/${msgs.link}" target="_blank"><img class="img-fluid" style="max-width: 25vw; max-height: 25vw" src="storage/whatsapp/${msgs.link}" alt="${msgs.msg}"></a>
                                                 <div class="msg-text col-12">${msgs.msg}</div>
                                             </div>
-                                            <span class="msg-hora float-end">${new Date(msgs.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
                                     </div>
                                 `);
@@ -125,10 +125,10 @@
                                     <div class="m-3 row d-flex justify-content-start">
                                         <div class="col-auto msg-receive">
                                             <div class="msg-text col-12">
-                                                <a href="storage/whatsapp/${msgs.link}" target="_blank"><img class="img-fluid" style="max-width: 25vw; max-height: 25vw" src="storage/whatsapp/1960125011428470.jpeg" alt="teste"></a>
+                                                <a href="storage/whatsapp/${msgs.link}" target="_blank"><img class="img-fluid" style="max-width: 25vw; max-height: 25vw" src="storage/whatsapp/${msgs.link}" alt="${msgs.msg}"></a>
                                                 <div class="msg-text col-12">${msgs.msg}</div>
                                             </div>
-                                            <span class="msg-hora float-end">${new Date(msgs.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
                                     </div>
                                 `);

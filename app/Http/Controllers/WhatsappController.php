@@ -9,12 +9,15 @@ use App\Models\MensagensModel;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class WhatsappController extends Controller
 {
     // tipos de msg 0 = boas vindas, 1 = bot, 2 = user, 3 = troca nome, 4 = texto, 5 = audio, 6 = imagem, 7 = Procurar Congr
     // status de conversas 0 = padrao, 1 = dep ti
+
+
     public function show()
     {
         $request = Request::capture();
@@ -149,7 +152,7 @@ class WhatsappController extends Controller
         $msgs = MensagensModel::where('conversa_id_to','=',$conversa->id)->orderBy('created_at', 'desc')->take(10)->get();
 
         switch ($conversa->status) {
-            case 0:
+            case 0: // Conversa com o bot
                 // Respostas de botoes sim ou nao
                 if(!empty($msgSimNao)){
                     if($msgSimNao != 'simNomeCorreto'){// pula a primeira mensagem de boas vindas
@@ -243,13 +246,33 @@ class WhatsappController extends Controller
                     $this->enviarMsgLista($business_phone_number_id, $number, 'Escolha uma opção:', $lista);
                 }
                 break;
-            case 1: // TI
-                MensagensModel::create([
-                    'msg' => $msgTxt,
-                    'conversa_id_from' => $conversa->id,
-                    'conversa_id_to' => 2,
-                    'tipo' => 4
-                ]);
+            case 1: // Conversa com dep TI
+                if($msg['type'] == 'audio') {
+                    $aud = $this->getAudio($msg);
+                    MensagensModel::create([
+                        'msg' => $msg['audio']['caption']??'',
+                        'conversa_id_from' => $conversa->id,
+                        'conversa_id_to' => 2,
+                        'link' => $aud,
+                        'tipo' => 5
+                    ]);
+                }else if($msg['type'] == 'image') {
+                    $img = $this->getImage($msg);
+                    MensagensModel::create([
+                        'msg' => $msg['image']['caption']??'',
+                        'conversa_id_from' => $conversa->id,
+                        'conversa_id_to' => 2,
+                        'link' => $img,
+                        'tipo' => 6
+                    ]);
+                }else{
+                    MensagensModel::create([
+                        'msg' => $msgTxt,
+                        'conversa_id_from' => $conversa->id,
+                        'conversa_id_to' => 2,
+                        'tipo' => 4
+                    ]);
+                }
                 ChatEnviaMensagem::dispatch($conversa->id);
                 break;
         }
@@ -463,5 +486,48 @@ class WhatsappController extends Controller
         }
 
         return null; // Caso não encontre a foto
+    }
+
+    public static function getImage($msg){
+        try {
+            $imgId = $msg['image']['id'];
+            $imgMime = explode('/', $msg['image']['mime_type'])[1];
+            $filename = "{$imgId}.{$imgMime}";
+            $client = new \GuzzleHttp\Client();
+            $response  = $client->request('GET', "https://graph.facebook.com/v23.0/{$imgId}", [
+                'headers' => [
+                    'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
+                ]
+            ]);
+            $mediaData = json_decode($response->getBody(), true);
+            $imagem = $client->get($mediaData['url'], [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . env('GRAPH_API_TOKEN'),
+                ],
+            ]);
+            Storage::disk('public')->put('whatsapp/'.$filename, $imagem->getBody());
+            return $filename;
+        } catch (\Throwable $th) {}
+    }
+    public static function getAudio($msg){
+        try {
+            $audId = $msg['audio']['id'];
+            $audMime = explode('/', $msg['audio']['mime_type'])[1];
+            $filename = "{$audId}.{$audMime}";
+            $client = new \GuzzleHttp\Client();
+            $response  = $client->request('GET', "https://graph.facebook.com/v23.0/{$audId}", [
+                'headers' => [
+                    'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
+                ]
+            ]);
+            $mediaData = json_decode($response->getBody(), true);
+            $audio = $client->get($mediaData['url'], [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . env('GRAPH_API_TOKEN'),
+                ],
+            ]);
+            Storage::disk('public')->put('whatsapp/'.$filename, $audio->getBody());
+            return $filename;
+        } catch (\Throwable $th) {}
     }
 }
