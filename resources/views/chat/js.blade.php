@@ -191,8 +191,6 @@
             .then((res) => {
                 $('#lista-conversas').html('');
                 if(res.data.length > 0) {
-                    console.log(res.data);
-                    
                     res.data.forEach($conversa => {
                         $('#lista-conversas').append(`
                             <div class="my-3 conversa row" onclick="getMsgs(${$conversa.id})">
@@ -220,10 +218,10 @@
     $(document).ready(() => {
         getConversas()
         window.Echo.channel('chat').listen('.chat.message', (data) => {
+            getConversas()
             if(id_conversa == data.message){
                 getMsgs(id_conversa)
             }
-            getConversas()
         });
     });
 </script>

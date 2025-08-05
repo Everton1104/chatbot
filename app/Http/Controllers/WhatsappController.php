@@ -164,6 +164,7 @@ class WhatsappController extends Controller
                                     'msg' => 'Nova solicitação para o departamento de TI',
                                     'tipo' => 4,
                                 ]);
+                                ChatEnviaMensagem::dispatch($conversa->id);
                                 break;
                         }
                         return;    

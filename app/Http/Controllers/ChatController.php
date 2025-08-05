@@ -97,12 +97,13 @@ class ChatController extends Controller
             ->orderBy('conversas.created_at', 'desc')
             ->get();
         foreach ($conversas as $conversa) {
-            $conversa->nao_lidas = MensagensModel::where([
+            $conversa['nao_lidas'] = MensagensModel::where([
                 ['conversa_id_from', '=', $conversa->id],
                 ['conversa_id_to', '=', Auth::user()->departamento_id],
                 ['status', '=', 0]
             ])->count();
         }
+        $conversas = $conversas->sortByDesc('nao_lidas');
         return $conversas;
     }
 
