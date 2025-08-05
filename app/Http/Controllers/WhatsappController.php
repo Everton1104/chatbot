@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 
 class WhatsappController extends Controller
 {
-    // tipos de msg 0 = boas vindas, 1 = bot, 2 = user, 3 = troca nome, 4 = texto, 5 = audio, 6 = imagem, 7 = Procurar Congr
+    // tipos de msg 0 = boas vindas, 1 = bot, 2 = user, 3 = troca nome, 4 = texto, 5 = audio, 6 = imagem, 7 = video, 10 = Procurar Congr
     // status de conversas 0 = padrao, 1 = dep ti
 
 
@@ -107,7 +107,7 @@ class WhatsappController extends Controller
                             'tipo' => 1, // bot
                         ]);
                         break;
-                    case '7':
+                    case '10':
                         $congrs = CongrsModel::where([['id','!=','0'],['id','!=','55'],['situacao','1'],['descCongr','like','%'.$msgTxt.'%']])->take(9)->get();
                         $lista =  [];
                         foreach ($congrs as $congr) {
@@ -223,7 +223,7 @@ class WhatsappController extends Controller
                                     //     'conversa_id_to' => $conversa->id, 
                                     //     'conversa_id_from' => 0,
                                     //     'msg' => 'Procurar congregação...',
-                                    //     'tipo' => 7, // congr
+                                    //     'tipo' => 10, // congr
                                     // ]);
                                     // break;
                         //Solicitações
@@ -264,6 +264,24 @@ class WhatsappController extends Controller
                         'conversa_id_to' => 2,
                         'link' => $img,
                         'tipo' => 6
+                    ]);
+                }else if($msg['type'] == 'video') {
+                    $vid = $this->getVideo($msg);
+                    MensagensModel::create([
+                        'msg' => $msg['video']['caption']??'',
+                        'conversa_id_from' => $conversa->id,
+                        'conversa_id_to' => 2,
+                        'link' => $vid,
+                        'tipo' => 7
+                    ]);
+                }else if($msg['type'] == 'document') {
+                    $doc = $this->getDocument($msg);
+                    MensagensModel::create([
+                        'msg' => $msg['document']['caption']??'',
+                        'conversa_id_from' => $conversa->id,
+                        'conversa_id_to' => 2,
+                        'link' => $doc,
+                        'tipo' => 8
                     ]);
                 }else{
                     MensagensModel::create([
@@ -413,32 +431,6 @@ class WhatsappController extends Controller
     }
 
     public static function enviarImg($business_phone_number_id, $numero, $link, $desc = '') {
-
-        // //tratamento de imagens
-        // if($request->all()['entry'][0]['changes'][0]['value']['messages'][0]['type'] == 'image'){// caso seja imegem ou arquivo
-        //     try {
-        //         $imgId = $request->all()['entry'][0]['changes'][0]['value']['messages'][0]['image']['id'];
-        //         $imgMime = explode('/', $request->all()['entry'][0]['changes'][0]['value']['messages'][0]['image']['mime_type'])[1];
-        //         $filename = "{$imgId}.{$imgMime}";
-        //         $client = new \GuzzleHttp\Client();
-        //         $response  = $client->request('GET', "https://graph.facebook.com/v23.0/{$imgId}", [
-        //             'headers' => [
-        //                 'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
-        //             ]
-        //         ]);
-        //         $mediaData = json_decode($response->getBody(), true);
-        //         $imagem = $client->get($mediaData['url'], [
-        //             'headers' => [
-        //                 'Authorization' => 'Bearer ' . env('GRAPH_API_TOKEN'),
-        //             ],
-        //         ]);
-        //         Storage::disk('public')->put('whatsapp/'.$filename, $imagem->getBody());
-        //         $this->enviarMsg($business_phone_number_id, $number, "Link para o arquivo: https://evertonrs.com.br/storage/whatsapp/{$filename}");
-        //     } catch (\Throwable $th) {
-        //         ChatEnviaMensagem::dispatch($th);
-        //     }
-        // }
-
         $client = new \GuzzleHttp\Client();
         $client->request('POST', "https://graph.facebook.com/v23.0/".$business_phone_number_id."/messages", [
             'headers' => [
@@ -527,6 +519,50 @@ class WhatsappController extends Controller
                 ],
             ]);
             Storage::disk('public')->put('whatsapp/'.$filename, $audio->getBody());
+            return $filename;
+        } catch (\Throwable $th) {}
+    }
+
+    public static function getVideo($msg){
+        try {
+            $vidId = $msg['video']['id'];
+            $vidMime = explode('/', $msg['video']['mime_type'])[1];
+            $filename = "{$vidId}.{$vidMime}";
+            $client = new \GuzzleHttp\Client();
+            $response  = $client->request('GET', "https://graph.facebook.com/v23.0/{$vidId}", [
+                'headers' => [
+                    'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
+                ]
+            ]);
+            $mediaData = json_decode($response->getBody(), true);
+            $video = $client->get($mediaData['url'], [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . env('GRAPH_API_TOKEN'),
+                ],
+            ]);
+            Storage::disk('public')->put('whatsapp/'.$filename, $video->getBody());
+            return $filename;
+        } catch (\Throwable $th) {}
+    }
+
+    public static function getDocument($msg){
+        try {
+            $docId = $msg['document']['id'];
+            $docMime = explode('/', $msg['document']['mime_type'])[1];
+            $filename = "{$docId}.{$docMime}";
+            $client = new \GuzzleHttp\Client();
+            $response  = $client->request('GET', "https://graph.facebook.com/v23.0/{$docId}", [
+                'headers' => [
+                    'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
+                ]
+            ]);
+            $mediaData = json_decode($response->getBody(), true);
+            $document = $client->get($mediaData['url'], [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . env('GRAPH_API_TOKEN'),
+                ],
+            ]);
+            Storage::disk('public')->put('whatsapp/'.$filename, $document->getBody());
             return $filename;
         } catch (\Throwable $th) {}
     }

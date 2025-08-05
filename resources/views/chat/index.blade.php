@@ -143,6 +143,9 @@
         .audio-player {
             max-width: 100%;
         }
+        .video-player {
+            max-width: 100%;
+        }
         /* orelha balao */
         .msg-send::before {
             content: "";

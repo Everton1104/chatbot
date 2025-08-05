@@ -53,7 +53,7 @@
                 }
                 Object.entries(item.msgs).forEach(([key, msgs]) => {
                 //item.msgs.forEach(msgs => {
-                    // tipos de msg 0 = boas vindas, 1 = bot, 2 = user, 3 = troca nome, 4 = texto, 5 = audio, 6 = imagem, 7 = Procurar Congr
+                    // tipos de msg 0 = boas vindas, 1 = bot, 2 = user, 3 = troca nome, 4 = texto, 5 = audio, 6 = imagem, 7 = video, 8 = documento, 10 = Procurar Congr
                     switch (msgs.tipo) {
                         case 4:
                             if(msgs.conversa_id_to == id) {
@@ -128,6 +128,58 @@
                                                 <a href="storage/whatsapp/${msgs.link}" target="_blank"><img class="img-fluid" style="max-width: 25vw; max-height: 25vw" src="storage/whatsapp/${msgs.link}" alt="${msgs.msg}"></a>
                                                 <div class="msg-text col-12">${msgs.msg}</div>
                                             </div>
+                                            <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
+                                        </div>
+                                    </div>
+                                `);
+                            }
+                            break;
+                        case 7:
+                            if(msgs.conversa_id_to == id) {
+                                $('#lista-msgs').append(`
+                                    <div class="m-3 row d-flex justify-content-end">
+                                        <div class="col-auto msg-send">
+                                            <div class="msg-text col-12">
+                                                <video class="video-player" controls>
+                                                    <source src="/storage/whatsapp/${msgs.link}?{{time()}}">
+                                                    Video indisponivel em seu navegador.
+                                                </video>
+                                            </div>
+                                            <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
+                                        </div>
+                                    </div>
+                                `);
+                            }else{
+                                $('#lista-msgs').append(`
+                                    <div class="m-3 row d-flex justify-content-start">
+                                        <div class="col-auto msg-receive">
+                                            <div class="msg-text col-12">
+                                                <video class="video-player" controls>
+                                                    <source src="/storage/whatsapp/${msgs.link}?{{time()}}">
+                                                    Video indisponivel em seu navegador.
+                                                </video>
+                                            </div>
+                                            <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
+                                        </div>
+                                    </div>
+                                `);
+                            }
+                            break;
+                        case 8:
+                            if(msgs.conversa_id_to == id) {
+                                $('#lista-msgs').append(`
+                                    <div class="m-3 row d-flex justify-content-end">
+                                        <div class="col-auto msg-send">
+                                            <div class="msg-text col-12"><a href="{{url('/')}}/storage/whatsapp/${msgs.link}" target="_blank">Link para o arquivo</a></div>
+                                            <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
+                                        </div>
+                                    </div>
+                                `);
+                            }else{
+                                $('#lista-msgs').append(`
+                                    <div class="m-3 row d-flex justify-content-start">
+                                        <div class="col-auto msg-receive">
+                                            <div class="msg-text col-12"><a href="{{url('/')}}/storage/whatsapp/${msgs.link}" target="_blank">Link para o arquivo</a></div>
                                             <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
                                     </div>

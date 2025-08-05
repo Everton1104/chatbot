@@ -28,13 +28,13 @@ class ChatController extends Controller
                     ['conversa_id_from', '=', $id],
                     ['conversa_id_to', '=', Auth::user()->departamento_id],
                     ['tipo', '>=', 4],
-                    ['tipo', '<=', 6]
+                    ['tipo', '<=', 8]
                 ])->orWhere(function($query2) use ($id) { // usei o query2 para colocar o or entre os dois where
                     $query2->where([
                         ['conversa_id_from', '=', Auth::user()->departamento_id],
                         ['conversa_id_to', '=', $id],
                         ['tipo', '>=', 4],
-                        ['tipo', '<=', 6]
+                        ['tipo', '<=', 8]
                     ]);
                 });
             })->get();
@@ -49,7 +49,7 @@ class ChatController extends Controller
             return $response;
         }
         // carregar todas as conversas sem as msgs
-        $conversas = MensagensModel::where([['conversa_id_to', '=', Auth::user()->departamento_id],['tipo', '>=', 4],['tipo', '<=', 6]])
+        $conversas = MensagensModel::where([['conversa_id_to', '=', Auth::user()->departamento_id],['tipo', '>=', 4],['tipo', '<=', 8]])
             ->leftJoin('conversas', 'conversas.id', '=', 'mensagens.conversa_id_from')
             ->select('conversas.id', 'conversas.numero', 'conversas.nome', 'conversas.foto')
             ->groupBy('conversas.id', 'conversas.numero', 'conversas.nome', 'conversas.foto')
@@ -60,7 +60,7 @@ class ChatController extends Controller
 
     public function enviaMsg(Request $request)
     {
-        // depois colocar tipo 5 e 6
+        // depois colocar tipo 5, 6 e 7 para usuario
         $request->validate([
             'msg' => 'required',
             'id' => 'required'
@@ -89,7 +89,7 @@ class ChatController extends Controller
         $conversas = MensagensModel::where([
                 ['conversa_id_to', '=', Auth::user()->departamento_id],
                 ['tipo', '>=', 4],
-                ['tipo', '<=', 6],
+                ['tipo', '<=', 8],
             ])
             ->leftJoin('conversas', 'conversas.id', '=', 'mensagens.conversa_id_from')
             ->select('conversas.id', 'conversas.numero', 'conversas.nome', 'conversas.foto')
@@ -112,7 +112,7 @@ class ChatController extends Controller
         $conversas = MensagensModel::where([
                 ['conversa_id_to', '=', Auth::user()->departamento_id],
                 ['tipo', '>=', 4],
-                ['tipo', '<=', 6],
+                ['tipo', '<=', 8],
                 ['nome', 'like', '%'.$request->busca.'%'],
             ])
             ->leftJoin('conversas', 'conversas.id', '=', 'mensagens.conversa_id_from')
