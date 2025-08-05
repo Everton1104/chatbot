@@ -202,7 +202,7 @@
             </div>
             <div class="msg-footer d-none d-flex">
                 <textarea type="text" style="height: 40px" id="msg-text" class="form-control me-2" placeholder="Digite sua mensagem..."></textarea>
-                <button class="btn btn-success" onclick="enviaMsg()">
+                <button class="btn btn-success" onclick="enviaMsg()&&getMsgs(id_conversa)">
                     <svg height="28px" viewBox="0 -960 960 960" width="30px" fill="#0a0a0a"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
                 </button>
             </div>

@@ -39,6 +39,10 @@ class ChatController extends Controller
                 });
             })->get();
 
+            foreach ($mensagens as $msg) {
+                $msg->update(['status' => 1]);
+            }
+
             $response = $conversa->toArray();
             $response['msgs'] = $mensagens->toArray();
 
@@ -68,8 +72,6 @@ class ChatController extends Controller
             'tipo' => 4
         ]);
         WhatsappController::enviarMsg(env('PHONE_NUMBER_ID'), ConversasModel::find($request->id)->numero, 'Mensagem de '.Auth::user()->name.":\r\n\r\n".$request->msg);
-        // depois verificar se ao enviar msg todos os canais websocket serao atualizados
-        // qualquer coisa configura-los por id de departamento para evitar atualizar tudo
         ChatEnviaMensagem::dispatch($request->id);
         return $this->getMsgs($request->id);
     }
@@ -94,6 +96,13 @@ class ChatController extends Controller
             ->groupBy('conversas.id', 'conversas.numero', 'conversas.nome', 'conversas.foto')
             ->orderBy('conversas.created_at', 'desc')
             ->get();
+        foreach ($conversas as $conversa) {
+            $conversa->nao_lidas = MensagensModel::where([
+                ['conversa_id_from', '=', $conversa->id],
+                ['conversa_id_to', '=', Auth::user()->departamento_id],
+                ['status', '=', 0]
+            ])->count();
+        }
         return $conversas;
     }
 

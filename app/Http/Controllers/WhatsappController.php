@@ -6,6 +6,7 @@ use App\Events\ChatEnviaMensagem;
 use App\Models\CongrsModel;
 use App\Models\ConversasModel;
 use App\Models\MensagensModel;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -31,18 +32,31 @@ class WhatsappController extends Controller
         $business_phone_number_id = $request['entry'][0]['changes'][0]['value']['metadata']['phone_number_id']??0;
         $nome = $request['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name']??'';
         $msg = $request['entry'][0]['changes'][0]['value']['messages'][0]??'';
+        $wa_id = $request['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id']??'';
         $msgTxt = $msg['text']['body']??'';
         $msgSimNao = $msg['interactive']['button_reply']['id']??null;
         $msgLista = $msg['interactive']['list_reply']['id']??null;
         $number = $msg['from']??0;
 
+        
         try {
             $conversa = ConversasModel::where('numero','=',$number)->first();
             if(!$conversa){ // Nova conversa
                 if($number != 0){
+                    $link = '0.jpg';
+                    $linkFotoPerfil = $this->getProfilePicture($wa_id);
+                    if ($linkFotoPerfil) {
+                        try {
+                            // Baixa a imagem e salva no storage
+                            $contents = file_get_contents($linkFotoPerfil);
+                            Storage::put("whatsapp/perfil-".$number.".jpg", $contents);
+                            $link = "perfil-".$number.".jpg"; // Atualiza o link
+                        } catch (\Exception $e) {}
+                    }
                     $conversa = ConversasModel::create([
                         'numero' => $number,
-                        'nome' => $nome
+                        'nome' => $nome,
+                        'foto' => $link,
                     ]);
                     //msg de boas vindas
                     $msgBoasVindas = "Olá, bem vindo ao chatbot do Evtu, antes de começar, seu nome é ".$nome."?";
@@ -416,5 +430,37 @@ class WhatsappController extends Controller
                 ]
             ]
         ]);
+    }
+
+    public static function getProfilePicture($wa_id, $type = 'normal') {
+
+        // só vai funcionar depois de ativar o recurso whatsapp_business_management no painel da api
+        // requer um novo video do app funcionando nome correto e etc.
+
+        $client = new \GuzzleHttp\Client();
+        
+        try {
+            $response = $client->request('GET', "https://graph.facebook.com/v23.0/".$wa_id."/picture", [
+                'headers' => [
+                    'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
+                ],
+                'query' => [
+                    'type' => $type,       // 'small', 'normal', or 'large'
+                    'redirect' => 'false'   // Retorna JSON em vez de redirecionar
+                ]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+
+            if (isset($data['data'])) {
+                return $data['data']['url']; // Expira em 5 minutos!
+            }
+
+        } catch (RequestException $e) {
+            // Log do erro (opcional)
+            return "Erro ao buscar foto do WhatsApp: " . $e->getMessage();
+        }
+
+        return null; // Caso não encontre a foto
     }
 }

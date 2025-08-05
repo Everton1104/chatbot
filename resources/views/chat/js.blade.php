@@ -35,6 +35,7 @@
     {
         axios.post('loadMsgs', {id})
             .then((res) => {
+                getConversas()
                 item = res.data
                 id_conversa = item.id
                 fecharConversa();
@@ -142,13 +143,6 @@
             });
     }
 
-    $('#msg-text').on('keyup', (e) => {
-        if (e.key === 'Enter') {
-            if($('#msg-text').val() == '') return;
-            enviaMsg();
-            getMsgs(id_conversa)
-        }
-    })
     function enviaMsg()
     {
         let msg = $('#msg-text').val();
@@ -197,15 +191,22 @@
             .then((res) => {
                 $('#lista-conversas').html('');
                 if(res.data.length > 0) {
+                    console.log(res.data);
+                    
                     res.data.forEach($conversa => {
                         $('#lista-conversas').append(`
-                            <div class="my-3 conversa" onclick="getMsgs(${$conversa.id})">
-                                <img class="img-perfil" src="storage/whatsapp/${ $conversa.foto ?? '0.jpg' }" alt="ft">
-                                <span class="nome-perfil">
-                                    ${ $conversa.name??$conversa.nome }
-                                    <br>
-                                    ${ $conversa.numero ? '(' + $conversa.numero.substring(2,4) + ') ' + $conversa.numero.substring(4,9) + '-' + $conversa.numero.substring(9) : '' }
-                                </span>
+                            <div class="my-3 conversa row" onclick="getMsgs(${$conversa.id})">
+                                <div class="col-11 d-flex">
+                                    <img class="img-perfil" src="storage/whatsapp/${ $conversa.foto ?? '0.jpg' }" alt="ft">
+                                    <span class="nome-perfil">
+                                        ${ $conversa.name??$conversa.nome }
+                                        <br>
+                                        ${ $conversa.numero ? '(' + $conversa.numero.substring(2,4) + ') ' + $conversa.numero.substring(4,9) + '-' + $conversa.numero.substring(9) : '' }
+                                    </span>
+                                </div>
+                                <div class="col-1 badge pill bg-success ${ $conversa.nao_lidas==0?'d-none':'' }">
+                                    ${ $conversa.nao_lidas }
+                                </div>
                             </div>
                         `);
                     });
@@ -222,6 +223,7 @@
             if(id_conversa == data.message){
                 getMsgs(id_conversa)
             }
+            getConversas()
         });
     });
 </script>
