@@ -267,6 +267,33 @@
             });
     }
 
+    function enviarDoc()
+    {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '*';
+        input.style.display = 'none';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('id', id_conversa);
+            axios.post('enviaDoc', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            .then((res) => {
+                console.log(res.data);
+            })
+            .catch((err) => {
+                console.log('Erro axios ->'+err);
+            });
+        };
+        document.body.appendChild(input);
+        input.click();
+    }
+
     $(document).ready(() => {
         getConversas()
         window.Echo.channel('chat').listen('.chat.message', (data) => {

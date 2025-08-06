@@ -60,7 +60,6 @@ class ChatController extends Controller
 
     public function enviaMsg(Request $request)
     {
-        // depois colocar tipo 5, 6 e 7 para usuario
         $request->validate([
             'msg' => 'required',
             'id' => 'required'
@@ -121,5 +120,60 @@ class ChatController extends Controller
             ->orderBy('conversas.created_at', 'desc')
             ->get();
         return $conversas;
+    }
+
+    public function enviaDoc(Request $request)
+    {
+        $request->validate([
+            'file' => 'required',
+        ]);
+        $mimeType = $request->file('file')->getMimeType();
+        $randomId = substr(str_shuffle('0123456789'), 0, 15);
+        $request->file('file')->storeAs('whatsapp', $randomId.".".$request->file('file')->getClientOriginalExtension(), ['disk' => 'public']);
+        $link = $randomId.".".$request->file('file')->getClientOriginalExtension();
+        switch (explode('/',$mimeType)[0]) {
+            case 'image':
+                MensagensModel::create([
+                    'msg' => '',
+                    'conversa_id_from' => Auth::user()->departamento_id,
+                    'conversa_id_to' => $request->id,
+                    'link' => $link,
+                    'tipo' => 6
+                ]);
+                WhatsappController::enviarImg(env('PHONE_NUMBER_ID'), ConversasModel::find($request->id)->numero, url('/').'/storage/whatsapp/'.$link, 'Imagem enviada por '.Auth::user()->name);
+                break;
+            case 'audio':
+                MensagensModel::create([
+                    'msg' => '',
+                    'conversa_id_from' => Auth::user()->departamento_id,
+                    'conversa_id_to' => $request->id,
+                    'link' => $link,
+                    'tipo' => 5
+                ]);
+                WhatsappController::enviarAudio(env('PHONE_NUMBER_ID'), ConversasModel::find($request->id)->numero, url('/').'/storage/whatsapp/'.$link, 'Audio enviado por '.Auth::user()->name);
+                break;
+            case 'video':
+                MensagensModel::create([
+                    'msg' => '',
+                    'conversa_id_from' => Auth::user()->departamento_id,
+                    'conversa_id_to' => $request->id,
+                    'link' => $link,
+                    'tipo' => 7
+                ]);
+                WhatsappController::enviarVideo(env('PHONE_NUMBER_ID'), ConversasModel::find($request->id)->numero, url('/').'/storage/whatsapp/'.$link, 'Video enviado por '.Auth::user()->name);
+                break;
+            default:
+                MensagensModel::create([
+                    'msg' => '',
+                    'conversa_id_from' => Auth::user()->departamento_id,
+                    'conversa_id_to' => $request->id,
+                    'link' => $link,
+                    'tipo' => 8
+                ]);
+                WhatsappController::enviarDoc(env('PHONE_NUMBER_ID'), ConversasModel::find($request->id)->numero, url('/').'/storage/whatsapp/'.$link, 'Arquivo enviado por '.Auth::user()->name);
+                break;
+        }
+        ChatEnviaMensagem::dispatch($request->id);
+        return $this->getMsgs($request->id);
     }
 }

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 
 class WhatsappController extends Controller
 {
-    // tipos de msg 0 = boas vindas, 1 = bot, 2 = user, 3 = troca nome, 4 = texto, 5 = audio, 6 = imagem, 7 = video, 10 = Procurar Congr
+    // tipos de msg 0 = boas vindas, 1 = bot, 2 = user, 3 = troca nome, 4 = texto, 5 = audio, 6 = imagem, 7 = video, 8 = documento, 10 = Procurar Congr
     // status de conversas 0 = padrao, 1 = dep ti
 
 
@@ -448,6 +448,23 @@ class WhatsappController extends Controller
         ]);
     }
 
+    public static function enviarAudio($business_phone_number_id, $numero, $link, $desc = '') {
+        $client = new \GuzzleHttp\Client();
+        $client->request('POST', "https://graph.facebook.com/v23.0/".$business_phone_number_id."/messages", [
+            'headers' => [
+                'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
+            ],
+            'json' => [
+                'messaging_product' => 'whatsapp',
+                'to' => $numero,
+                'type' => 'audio',
+                'audio' => [
+                    'link' => $link,
+                ]
+            ]
+        ]);
+    }
+
     public static function getProfilePicture($wa_id, $type = 'normal') {
 
         // só vai funcionar depois de ativar o recurso whatsapp_business_management no painel da api
@@ -478,6 +495,42 @@ class WhatsappController extends Controller
         }
 
         return null; // Caso não encontre a foto
+    }
+
+    public static function enviarVideo($business_phone_number_id, $numero, $link, $desc = '') {
+        $client = new \GuzzleHttp\Client();
+        $client->request('POST', "https://graph.facebook.com/v23.0/".$business_phone_number_id."/messages", [
+            'headers' => [
+                'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
+            ],
+            'json' => [
+                'messaging_product' => 'whatsapp',
+                'to' => $numero,
+                'type' => 'video',
+                'video' => [
+                    'link' => $link,
+                    "caption" => $desc
+                ]
+            ]
+        ]);
+    }
+    
+    public static function enviarDoc($business_phone_number_id, $numero, $link, $desc = '') {
+        $client = new \GuzzleHttp\Client();
+        $client->request('POST', "https://graph.facebook.com/v23.0/".$business_phone_number_id."/messages", [
+            'headers' => [
+                'Authorization' => "Bearer " . env('GRAPH_API_TOKEN')
+            ],
+            'json' => [
+                'messaging_product' => 'whatsapp',
+                'to' => $numero,
+                'type' => 'document',
+                'document' => [
+                    'link' => $link,
+                    "caption" => $desc
+                ]
+            ]
+        ]);
     }
 
     public static function getImage($msg){

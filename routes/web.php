@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::post('enviaMsg', [ChatController::class, 'enviaMsg'] )->name('enviaMsg');
     Route::post('procurarConversa', [ChatController::class, 'procurarConversa'] )->name('procurarConversa');
     Route::post('getConversas', [ChatController::class, 'getConversas'] )->name('getConversas');
+    Route::post('enviaDoc', [ChatController::class, 'enviaDoc'] )->name('enviaDoc');
 });
 
 Route::get('politicabot', function () {

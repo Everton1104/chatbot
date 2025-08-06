@@ -201,11 +201,14 @@
                 <h1 class="text-center">Bem vindo ao Chat</h1>
                 <h2 class="text-center">{{ Auth::user()->name }}</h2>
             </div>
-            <div id="lista-msgs">
+                <div id="lista-msgs">
             </div>
             <div class="msg-footer d-none d-flex">
-                <textarea type="text" style="height: 40px" id="msg-text" class="form-control me-2" placeholder="Digite sua mensagem..."></textarea>
-                <button class="btn btn-success" onclick="enviaMsg()&&getMsgs(id_conversa)">
+                <button class="btn me-2" onclick="enviarDoc()">
+                    <svg height="28px" viewBox="0 -960 960 960" width="30px" fill="#ffffff"><path d="M720-330q0 104-73 177T470-80q-104 0-177-73t-73-177v-370q0-75 52.5-127.5T400-880q75 0 127.5 52.5T580-700v350q0 46-32 78t-78 32q-46 0-78-32t-32-78v-370h80v370q0 13 8.5 21.5T470-320q13 0 21.5-8.5T500-350v-350q-1-42-29.5-71T400-800q-42 0-71 29t-29 71v370q-1 71 49 120.5T470-160q70 0 119-49.5T640-330v-390h80v390Z"/></svg>
+                </button>
+                <textarea type="text" style="height: 40px" id="msg-text" class="form-control" placeholder="Digite sua mensagem..."></textarea>
+                <button class="btn btn-success ms-2" onclick="enviaMsg()&&getMsgs(id_conversa)">
                     <svg height="28px" viewBox="0 -960 960 960" width="30px" fill="#0a0a0a"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
                 </button>
             </div>
