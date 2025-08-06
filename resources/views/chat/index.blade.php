@@ -204,11 +204,32 @@
                 <div id="lista-msgs">
             </div>
             <div class="msg-footer d-none d-flex">
-                <button class="btn me-2" onclick="enviarDoc()">
+                {{-- Anexo --}}
+                <button class="btn me-2 btn-anexo" onclick="enviarDoc()">
                     <svg height="28px" viewBox="0 -960 960 960" width="30px" fill="#ffffff"><path d="M720-330q0 104-73 177T470-80q-104 0-177-73t-73-177v-370q0-75 52.5-127.5T400-880q75 0 127.5 52.5T580-700v350q0 46-32 78t-78 32q-46 0-78-32t-32-78v-370h80v370q0 13 8.5 21.5T470-320q13 0 21.5-8.5T500-350v-350q-1-42-29.5-71T400-800q-42 0-71 29t-29 71v370q-1 71 49 120.5T470-160q70 0 119-49.5T640-330v-390h80v390Z"/></svg>
                 </button>
+                {{-- btn-cancelar-audio --}}
+                <button class="btn me-2 btn-danger btn-cancelar-audio d-none">
+                    <svg height="28px" viewBox="0 -960 960 960" width="30px" fill="#0a0a0a"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
+                </button>
+                {{-- Textarea Msg --}}
                 <textarea type="text" style="height: 40px" id="msg-text" class="form-control" placeholder="Digite sua mensagem..."></textarea>
-                <button class="btn btn-success ms-2" onclick="enviaMsg()&&getMsgs(id_conversa)">
+                {{-- Audio Player --}}
+                <audio id="audioPlayback" controls class="audio-player-gravacao d-none"></audio> 
+                {{-- btn-enviar-txt --}}
+                <button class="btn btn-success ms-2 btn-envia-text d-none" onclick="enviaMsg()&&getMsgs(id_conversa)">
+                    <svg height="28px" viewBox="0 -960 960 960" width="30px" fill="#0a0a0a"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
+                </button>
+                {{-- btn-grava-audio --}}
+                <button class="btn btn-success ms-2 btn-grava-audio" id="startBtn">
+                    <svg height="28px" viewBox="0 -960 960 960" width="30px" fill="#0a0a0a"><path d="M480-400q-50 0-85-35t-35-85v-240q0-50 35-85t85-35q50 0 85 35t35 85v240q0 50-35 85t-85 35Zm0-240Zm-40 520v-123q-104-14-172-93t-68-184h80q0 83 58.5 141.5T480-320q83 0 141.5-58.5T680-520h80q0 105-68 184t-172 93v123h-80Zm40-360q17 0 28.5-11.5T520-520v-240q0-17-11.5-28.5T480-800q-17 0-28.5 11.5T440-760v240q0 17 11.5 28.5T480-480Z"/></svg>
+                </button>
+                {{-- btn-stop-audio --}}
+                <button class="btn btn-success ms-2 btn-stop-audio d-none" id="stopBtn">
+                    <svg height="28px" viewBox="0 -960 960 960" width="30px" fill="#0a0a0a"><path d="M320-640v320-320Zm-80 400v-480h480v480H240Zm80-80h320v-320H320v320Z"/></svg>
+                </button>
+                {{-- btn-envia-audio --}}
+                <button class="btn btn-success ms-2 btn-envia-audio d-none">
                     <svg height="28px" viewBox="0 -960 960 960" width="30px" fill="#0a0a0a"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
                 </button>
             </div>

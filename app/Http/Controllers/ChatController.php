@@ -126,11 +126,26 @@ class ChatController extends Controller
     {
         $request->validate([
             'file' => 'required',
+            'id' => 'required',
         ]);
         $mimeType = $request->file('file')->getMimeType();
         $randomId = substr(str_shuffle('0123456789'), 0, 15);
         $request->file('file')->storeAs('whatsapp', $randomId.".".$request->file('file')->getClientOriginalExtension(), ['disk' => 'public']);
         $link = $randomId.".".$request->file('file')->getClientOriginalExtension();
+
+        if(isset($request->gravacao)) {
+            MensagensModel::create([
+                'msg' => 'Audio gravado por '.Auth::user()->name,
+                'conversa_id_from' => Auth::user()->departamento_id,
+                'conversa_id_to' => $request->id,
+                'link' => $link,
+                'tipo' => 5
+            ]);
+            WhatsappController::enviarAudio(env('PHONE_NUMBER_ID'), ConversasModel::find($request->id)->numero, url('/').'/storage/whatsapp/'.$link, 'Audio gravado por '.Auth::user()->name);
+            ChatEnviaMensagem::dispatch($request->id);
+            return $this->getMsgs($request->id);
+        }
+
         switch (explode('/',$mimeType)[0]) {
             case 'image':
                 MensagensModel::create([

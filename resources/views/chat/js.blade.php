@@ -1,4 +1,27 @@
 <script>
+
+    $(document).ready(() => {
+        getConversas()
+        window.Echo.channel('chat').listen('.chat.message', (data) => {
+            getConversas()
+            if(id_conversa == data.message){
+                getMsgs(id_conversa)
+            }
+        });
+    });
+
+    $(document).on('keyup', (e) => {
+        if(e.key == "Escape"){
+            $('#msg-inicio').removeClass('d-none');
+            $('.msg-footer').addClass('d-none');
+            $('#img-perfil-header').addClass('d-none');
+            $('#nome-header').text('Selecione uma conversa');
+            $('#lista-msgs').html('');
+            fecharConversa();
+            id_conversa = 0
+        }
+    })
+
     conversas = true
     function fecharConversa()
     {
@@ -17,18 +40,6 @@
             conversas = !conversas
         }
     }
-
-    $(document).on('keyup', (e) => {
-        if(e.key == "Escape"){
-            $('#msg-inicio').removeClass('d-none');
-            $('.msg-footer').addClass('d-none');
-            $('#img-perfil-header').addClass('d-none');
-            $('#nome-header').text('Selecione uma conversa');
-            $('#lista-msgs').html('');
-            fecharConversa();
-            id_conversa = 0
-        }
-    })
 
     let id_conversa = 0
     function getMsgs(id)
@@ -302,13 +313,112 @@
         input.click();
     }
 
-    $(document).ready(() => {
-        getConversas()
-        window.Echo.channel('chat').listen('.chat.message', (data) => {
-            getConversas()
-            if(id_conversa == data.message){
-                getMsgs(id_conversa)
-            }
-        });
+    $('#msg-text').on('keyup', (e) => {
+        if($('#msg-text').val() != '') {
+            $('.btn-envia-text').removeClass('d-none');
+            $('.btn-grava-audio').addClass('d-none');
+            $('.btn-stop-audio').addClass('d-none');
+            $('.btn-envia-audio').addClass('d-none');
+            $('.audio-player-gravacao').addClass('d-none');
+        } else {
+            $('.btn-envia-text').addClass('d-none');
+            $('.btn-grava-audio').removeClass('d-none');
+        }
     });
+
+    // Gravação de áudio
+    let mediaRecorder;
+    let audioChunks = [];
+    const statusDiv = document.getElementById('status');
+    
+    // Elementos do DOM
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const audioPlayback = document.getElementById('audioPlayback');
+
+    // Iniciar gravação
+    startBtn.addEventListener('click', async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+            
+            mediaRecorder.start(100); // Coletar dados a cada 100ms
+
+            $('.btn-stop-audio').removeClass('d-none');
+            $('.btn-anexo').prop('disabled', true);
+            $('.btn-grava-audio').addClass('d-none');
+
+            $('#msg-text').val('Gravando...');
+            $('#msg-text').prop('disabled', true);
+
+        } catch (error) {
+            statusDiv.textContent = "Erro: " + error.message;
+            console.error("Erro ao acessar microfone:", error);
+        }
+    });
+
+    // Parar gravação
+    stopBtn.addEventListener('click', async () => {
+        mediaRecorder.stop();
+        
+        // Parar todas as trilhas do stream
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        
+        // Esperar pelo evento 'onstop'
+        mediaRecorder.onstop = async () => {
+            let audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
+            audioChunks = [];
+
+            audioPlayback.src = URL.createObjectURL(audioBlob);
+            $('.audio-player-gravacao').removeClass('d-none');
+            $('.btn-envia-audio').removeClass('d-none');
+            $('#msg-text').addClass('d-none');
+            $('.btn-stop-audio').addClass('d-none');
+            $('.btn-cancelar-audio').removeClass('d-none');
+
+            $('#msg-text').val('');
+            $('#msg-text').prop('disabled', false);
+        };
+    });
+
+    // Enviar gravação
+    $('.btn-envia-audio').on('click', async function () {
+        $('.btn-grava-audio').removeClass('d-none');
+        $('#msg-text').removeClass('d-none');
+        $('.btn-envia-audio').addClass('d-none');
+        $('.audio-player-gravacao').addClass('d-none');
+        $('.btn-cancelar-audio').addClass('d-none');
+        $('.btn-anexo').prop('disabled', false);
+
+        const formData = new FormData();
+        const audioElement = document.querySelector('.audio-player-gravacao');
+        const audioBlob = await fetch(audioElement.src).then(response => response.blob());
+        
+        formData.append('file', audioBlob);
+        formData.append('id', id_conversa);
+        formData.append('gravacao', true);
+
+        axios.post('enviaArq', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+        .catch((err) => {
+            console.log('Erro axios ->'+err);
+        });
+    })
+
+    // Cancelar gravação
+    $('.btn-cancelar-audio').on('click', () => {
+        $('.btn-grava-audio').removeClass('d-none');
+        $('#msg-text').removeClass('d-none');
+        $('.btn-envia-audio').addClass('d-none');
+        $('.audio-player-gravacao').addClass('d-none');
+        $('.btn-cancelar-audio').addClass('d-none');
+        $('.btn-anexo').prop('disabled', false);
+    })
 </script>
