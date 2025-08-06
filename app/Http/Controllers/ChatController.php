@@ -122,7 +122,7 @@ class ChatController extends Controller
         return $conversas;
     }
 
-    public function enviaDoc(Request $request)
+    public function enviaArq(Request $request)
     {
         $request->validate([
             'file' => 'required',
@@ -134,7 +134,7 @@ class ChatController extends Controller
         switch (explode('/',$mimeType)[0]) {
             case 'image':
                 MensagensModel::create([
-                    'msg' => '',
+                    'msg' => 'Imagem enviada por '.Auth::user()->name,
                     'conversa_id_from' => Auth::user()->departamento_id,
                     'conversa_id_to' => $request->id,
                     'link' => $link,
@@ -144,7 +144,7 @@ class ChatController extends Controller
                 break;
             case 'audio':
                 MensagensModel::create([
-                    'msg' => '',
+                    'msg' => 'Audio enviado por '.Auth::user()->name,
                     'conversa_id_from' => Auth::user()->departamento_id,
                     'conversa_id_to' => $request->id,
                     'link' => $link,
@@ -154,7 +154,7 @@ class ChatController extends Controller
                 break;
             case 'video':
                 MensagensModel::create([
-                    'msg' => '',
+                    'msg' => 'Video enviado por '.Auth::user()->name,
                     'conversa_id_from' => Auth::user()->departamento_id,
                     'conversa_id_to' => $request->id,
                     'link' => $link,
@@ -164,7 +164,7 @@ class ChatController extends Controller
                 break;
             default:
                 MensagensModel::create([
-                    'msg' => '',
+                    'msg' => 'Arquivo enviado por '.Auth::user()->name,
                     'conversa_id_from' => Auth::user()->departamento_id,
                     'conversa_id_to' => $request->id,
                     'link' => $link,

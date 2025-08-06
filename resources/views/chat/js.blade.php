@@ -81,6 +81,7 @@
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-end">
                                         <div class="col-auto msg-send">
+                                            <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12">
                                                 <audio class="audio-player" controls>
                                                     <source src="/storage/whatsapp/${msgs.link}?{{time()}}" type="audio/mpeg">
@@ -95,6 +96,7 @@
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-start">
                                         <div class="col-auto msg-receive">
+                                            <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12">
                                                 <audio class="audio-player" controls>
                                                     <source src="/storage/whatsapp/${msgs.link}?{{time()}}" type="audio/mpeg">
@@ -112,6 +114,7 @@
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-end">
                                         <div class="col-auto msg-send">
+                                            <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12">
                                                 <a href="storage/whatsapp/${msgs.link}" target="_blank"><img class="img-fluid" style="max-width: 25vw; max-height: 25vw" src="storage/whatsapp/${msgs.link}" alt="${msgs.msg}"></a>
                                                 <div class="msg-text col-12">${msgs.msg}</div>
@@ -124,6 +127,7 @@
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-start">
                                         <div class="col-auto msg-receive">
+                                            <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12">
                                                 <a href="storage/whatsapp/${msgs.link}" target="_blank"><img class="img-fluid" style="max-width: 25vw; max-height: 25vw" src="storage/whatsapp/${msgs.link}" alt="${msgs.msg}"></a>
                                                 <div class="msg-text col-12">${msgs.msg}</div>
@@ -139,6 +143,7 @@
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-end">
                                         <div class="col-auto msg-send">
+                                            <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12">
                                                 <video class="video-player" controls>
                                                     <source src="/storage/whatsapp/${msgs.link}?{{time()}}">
@@ -153,6 +158,7 @@
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-start">
                                         <div class="col-auto msg-receive">
+                                            <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12">
                                                 <video class="video-player" controls>
                                                     <source src="/storage/whatsapp/${msgs.link}?{{time()}}">
@@ -170,6 +176,7 @@
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-end">
                                         <div class="col-auto msg-send">
+                                            <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12"><a href="{{url('/')}}/storage/whatsapp/${msgs.link}" target="_blank">Link para o arquivo</a></div>
                                             <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
@@ -179,6 +186,7 @@
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-start">
                                         <div class="col-auto msg-receive">
+                                            <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12"><a href="{{url('/')}}/storage/whatsapp/${msgs.link}" target="_blank">Link para o arquivo</a></div>
                                             <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
@@ -278,7 +286,7 @@
             const formData = new FormData();
             formData.append('file', file);
             formData.append('id', id_conversa);
-            axios.post('enviaDoc', formData, {
+            axios.post('enviaArq', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
