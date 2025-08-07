@@ -54,6 +54,8 @@
                 $('#msg-inicio').addClass('d-none');
                 $('.msg-footer').removeClass('d-none');
                 $('#img-perfil-header').removeClass('d-none');
+                $('.btn-envia-text').addClass('d-none');
+                $('.btn-grava-audio').removeClass('d-none');
                 setTimeout(() => {
                     $('.msgs-container').scrollTop($('.msgs-container')[0].scrollHeight);
                 }, 250);
