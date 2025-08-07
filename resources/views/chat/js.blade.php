@@ -62,6 +62,27 @@
                 }else{
                     $('#nome-header').text(item.nome);
                 }
+
+                // Um unico player de audio para reutilização em todas as mensagens
+                $('#lista-msgs').append(`
+                    <div id="global-audio-player" style="display:none">
+                        <audio id="main-audio-player" controls>
+                            Seu navegador não suporta o elemento de áudio.
+                        </audio>
+                    </div>
+                `);
+                const mainAudioPlayer = document.getElementById('main-audio-player');
+
+                // Um unico player de video para reutilização em todas as mensagens
+                $('#lista-msgs').append(`
+                    <div id="global-video-player" style="display:none">
+                        <video id="main-video-player" controls>
+                            Seu navegador não suporta o elemento de video.
+                        </video>
+                    </div>
+                `);
+                const mainVideoPlayer = document.getElementById('main-video-player');
+
                 Object.entries(item.msgs).forEach(([key, msgs]) => {
                 //item.msgs.forEach(msgs => {
                     // tipos de msg 0 = boas vindas, 1 = bot, 2 = user, 3 = troca nome, 4 = texto, 5 = audio, 6 = imagem, 7 = video, 8 = documento, 10 = Procurar Congr
@@ -87,37 +108,63 @@
                                 `);
                             }
                             break;
-                        case 5:
+                        case 5: // audio
                             if(msgs.conversa_id_to == id) {
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-end">
                                         <div class="col-auto msg-send">
                                             <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12">
-                                                <audio class="audio-player" controls>
-                                                    <source src="/storage/whatsapp/${msgs.link}?{{time()}}" type="audio/mpeg">
-                                                    Audio indisponivel em seu navegador.
-                                                </audio>
+                                                <button class="btn btn-sm btn-outline-primary play-audio-btn align-self-center my-3" 
+                                                        data-src="/storage/whatsapp/${msgs.link}?{{time()}}">
+                                                    Ouvir audio
+                                                </button>
                                             </div>
                                             <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
                                     </div>
                                 `);
+                                // Evernto para trazer o player global e colocar na msg
+                                $(document).on('click', '.play-audio-btn', function() {
+                                    const audioSrc = $(this).data('src');
+                                    $('.play-audio-btn').removeClass('d-none');
+                                    $(this).addClass('d-none');
+                                    mainAudioPlayer.pause();
+                                    mainAudioPlayer.currentTime = 0;
+                                    mainAudioPlayer.src = audioSrc;
+                                    $(this).parent().append($('#global-audio-player').show());
+                                    setTimeout(() => {
+                                        mainAudioPlayer.play().catch(e => {});
+                                    }, 250);
+                                });
                             }else{
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-start">
                                         <div class="col-auto msg-receive">
                                             <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12">
-                                                <audio class="audio-player" controls>
-                                                    <source src="/storage/whatsapp/${msgs.link}?{{time()}}" type="audio/mpeg">
-                                                    Audio indisponivel em seu navegador.
-                                                </audio>
+                                                <button class="btn btn-sm btn-outline-primary play-audio-btn align-self-center my-3" 
+                                                        data-src="/storage/whatsapp/${msgs.link}?{{time()}}">
+                                                    Ouvir audio
+                                                </button>
                                             </div>
                                             <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
                                     </div>
                                 `);
+                                // Evernto para trazer o player global e colocar na msg
+                                $(document).on('click', '.play-audio-btn', function() {
+                                    const audioSrc = $(this).data('src');
+                                    $('.play-audio-btn').removeClass('d-none');
+                                    $(this).addClass('d-none');
+                                    mainAudioPlayer.pause();
+                                    mainAudioPlayer.currentTime = 0;
+                                    mainAudioPlayer.src = audioSrc;
+                                    $(this).parent().append($('#global-audio-player').show());
+                                    setTimeout(() => {
+                                        mainAudioPlayer.play().catch(e => {});
+                                    }, 250);
+                                });
                             }
                             break;
                         case 6:
@@ -149,37 +196,63 @@
                                 `);
                             }
                             break;
-                        case 7:
+                        case 7: //video
                             if(msgs.conversa_id_to == id) {
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-end">
                                         <div class="col-auto msg-send">
                                             <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12">
-                                                <video class="video-player" controls>
-                                                    <source src="/storage/whatsapp/${msgs.link}?{{time()}}">
-                                                    Video indisponivel em seu navegador.
-                                                </video>
+                                                <button class="btn btn-sm btn-outline-primary play-video-btn my-3" 
+                                                        data-src="/storage/whatsapp/${msgs.link}?{{time()}}">
+                                                    Reproduzir video
+                                                </button>
                                             </div>
                                             <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
                                     </div>
                                 `);
+                                // Evernto para trazer o player global e colocar na msg
+                                $(document).on('click', '.play-video-btn', function() {
+                                    const videoSrc = $(this).data('src');
+                                    $('.play-video-btn').removeClass('d-none');
+                                    $(this).addClass('d-none');
+                                    mainVideoPlayer.pause();
+                                    mainVideoPlayer.currentTime = 0;
+                                    mainVideoPlayer.src = videoSrc;
+                                    $(this).parent().append($('#global-video-player').show());
+                                    setTimeout(() => {
+                                        mainVideoPlayer.play().catch(e => {});
+                                    }, 250);
+                                });
                             }else{
                                 $('#lista-msgs').append(`
                                     <div class="m-3 row d-flex justify-content-start">
                                         <div class="col-auto msg-receive">
                                             <div class="msg-text col-12">${msgs.msg.replace(/\n/g, '<br>')}</div>
                                             <div class="msg-text col-12">
-                                                <video class="video-player" controls>
-                                                    <source src="/storage/whatsapp/${msgs.link}?{{time()}}">
-                                                    Video indisponivel em seu navegador.
-                                                </video>
+                                                <button class="btn btn-sm btn-outline-primary play-video-btn my-3" 
+                                                        data-src="/storage/whatsapp/${msgs.link}?{{time()}}">
+                                                    Reproduzir video
+                                                </button>
                                             </div>
                                             <span class="msg-hora float-end">${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(msgs.created_at))}</span>
                                         </div>
                                     </div>
                                 `);
+                                // Evernto para trazer o player global e colocar na msg
+                                $(document).on('click', '.play-video-btn', function() {
+                                    const videoSrc = $(this).data('src');
+                                    $('.play-video-btn').removeClass('d-none');
+                                    $(this).addClass('d-none');
+                                    mainVideoPlayer.pause();
+                                    mainVideoPlayer.currentTime = 0;
+                                    mainVideoPlayer.src = videoSrc;
+                                    $(this).parent().append($('#global-video-player').show());
+                                    setTimeout(() => {
+                                        mainVideoPlayer.play().catch(e => {});
+                                    }, 250);
+                                });
                             }
                             break;
                         case 8:
@@ -327,98 +400,100 @@
     });
 
     // Gravação de áudio
-    let mediaRecorder;
-    let audioChunks = [];
-    const statusDiv = document.getElementById('status');
-    
-    // Elementos do DOM
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const audioPlayback = document.getElementById('audioPlayback');
-
-    // Iniciar gravação
-    startBtn.addEventListener('click', async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            
-            mediaRecorder.ondataavailable = (event) => {
-                audioChunks.push(event.data);
-            };
-            
-            mediaRecorder.start(100); // Coletar dados a cada 100ms
-
-            $('.btn-stop-audio').removeClass('d-none');
-            $('.btn-anexo').prop('disabled', true);
-            $('.btn-grava-audio').addClass('d-none');
-
-            $('#msg-text').val('Gravando...');
-            $('#msg-text').prop('disabled', true);
-
-        } catch (error) {
-            statusDiv.textContent = "Erro: " + error.message;
-            console.error("Erro ao acessar microfone:", error);
-        }
-    });
-
-    // Parar gravação
-    stopBtn.addEventListener('click', async () => {
-        mediaRecorder.stop();
+        let mediaRecorder;
+        let audioChunks = [];
+        const statusDiv = document.getElementById('status');
         
-        // Parar todas as trilhas do stream
-        mediaRecorder.stream.getTracks().forEach(track => track.stop());
-        
-        // Esperar pelo evento 'onstop'
-        mediaRecorder.onstop = async () => {
-            let audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
-            audioChunks = [];
+        // Elementos do DOM
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const audioPlayback = document.getElementById('audioPlayback');
 
-            audioPlayback.src = URL.createObjectURL(audioBlob);
-            $('.audio-player-gravacao').removeClass('d-none');
-            $('.btn-envia-audio').removeClass('d-none');
-            $('#msg-text').addClass('d-none');
-            $('.btn-stop-audio').addClass('d-none');
-            $('.btn-cancelar-audio').removeClass('d-none');
+        // Iniciar gravação
+        startBtn.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.start(100); // Coletar dados a cada 100ms
 
-            $('#msg-text').val('');
-            $('#msg-text').prop('disabled', false);
-        };
-    });
+                $('.btn-stop-audio').removeClass('d-none');
+                $('.btn-anexo').prop('disabled', true);
+                $('.btn-grava-audio').addClass('d-none');
 
-    // Enviar gravação
-    $('.btn-envia-audio').on('click', async function () {
-        $('.btn-grava-audio').removeClass('d-none');
-        $('#msg-text').removeClass('d-none');
-        $('.btn-envia-audio').addClass('d-none');
-        $('.audio-player-gravacao').addClass('d-none');
-        $('.btn-cancelar-audio').addClass('d-none');
-        $('.btn-anexo').prop('disabled', false);
+                $('#msg-text').val('Gravando...');
+                $('#msg-text').prop('disabled', true);
 
-        const formData = new FormData();
-        const audioElement = document.querySelector('.audio-player-gravacao');
-        const audioBlob = await fetch(audioElement.src).then(response => response.blob());
-        
-        formData.append('file', audioBlob);
-        formData.append('id', id_conversa);
-        formData.append('gravacao', true);
-
-        axios.post('enviaArq', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
+            } catch (error) {
+                statusDiv.textContent = "Erro: " + error.message;
+                console.error("Erro ao acessar microfone:", error);
             }
-        })
-        .catch((err) => {
-            console.log('Erro axios ->'+err);
         });
-    })
 
-    // Cancelar gravação
-    $('.btn-cancelar-audio').on('click', () => {
-        $('.btn-grava-audio').removeClass('d-none');
-        $('#msg-text').removeClass('d-none');
-        $('.btn-envia-audio').addClass('d-none');
-        $('.audio-player-gravacao').addClass('d-none');
-        $('.btn-cancelar-audio').addClass('d-none');
-        $('.btn-anexo').prop('disabled', false);
-    })
+        // Parar gravação
+        stopBtn.addEventListener('click', async () => {
+            mediaRecorder.stop();
+            
+            // Parar todas as trilhas do stream
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            
+            // Esperar pelo evento 'onstop'
+            mediaRecorder.onstop = async () => {
+                let audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                audioChunks = [];
+
+                audioPlayback.src = URL.createObjectURL(audioBlob);
+                $('.audio-player-gravacao').removeClass('d-none');
+                $('.btn-envia-audio').removeClass('d-none');
+                $('#msg-text').addClass('d-none');
+                $('.btn-stop-audio').addClass('d-none');
+                $('.btn-cancelar-audio').removeClass('d-none');
+
+                $('#msg-text').val('');
+                $('#msg-text').prop('disabled', false);
+            };
+        });
+
+        // Enviar gravação
+        $('.btn-envia-audio').on('click', async function () {
+            $('.btn-grava-audio').removeClass('d-none');
+            $('#msg-text').removeClass('d-none');
+            $('.btn-envia-audio').addClass('d-none');
+            $('.audio-player-gravacao').addClass('d-none');
+            $('.btn-cancelar-audio').addClass('d-none');
+            $('.btn-anexo').prop('disabled', false);
+
+            const formData = new FormData();
+            const audioElement = document.querySelector('.audio-player-gravacao');
+            const audioBlob = await fetch(audioElement.src).then(response => response.blob());
+            const file = new File([audioBlob], 'gravacao.webm', { type: 'audio/webm' });
+            
+            formData.append('file', file);
+            formData.append('id', id_conversa);
+
+            axios.post('enviaArq', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            .catch((err) => {
+                console.log('Erro axios ->'+err);
+            });
+        })
+
+        // Cancelar gravação
+        $('.btn-cancelar-audio').on('click', () => {
+            $('.btn-grava-audio').removeClass('d-none');
+            $('#msg-text').removeClass('d-none');
+            $('.btn-envia-audio').addClass('d-none');
+            $('.audio-player-gravacao').addClass('d-none');
+            $('.btn-cancelar-audio').addClass('d-none');
+            $('.btn-anexo').prop('disabled', false);
+        })
+    // Gravação de áudio
+
 </script>

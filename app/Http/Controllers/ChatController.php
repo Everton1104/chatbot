@@ -8,6 +8,7 @@ use App\Models\MensagensModel;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ChatController extends Controller
@@ -130,21 +131,29 @@ class ChatController extends Controller
         ]);
         $mimeType = $request->file('file')->getMimeType();
         $randomId = substr(str_shuffle('0123456789'), 0, 15);
-        $request->file('file')->storeAs('whatsapp', $randomId.".".$request->file('file')->getClientOriginalExtension(), ['disk' => 'public']);
         $link = $randomId.".".$request->file('file')->getClientOriginalExtension();
 
-        if(isset($request->gravacao)) {
-            MensagensModel::create([
-                'msg' => 'Audio gravado por '.Auth::user()->name,
-                'conversa_id_from' => Auth::user()->departamento_id,
-                'conversa_id_to' => $request->id,
-                'link' => $link,
-                'tipo' => 5
-            ]);
-            WhatsappController::enviarAudio(env('PHONE_NUMBER_ID'), ConversasModel::find($request->id)->numero, url('/').'/storage/whatsapp/'.$link, 'Audio gravado por '.Auth::user()->name);
-            ChatEnviaMensagem::dispatch($request->id);
-            return $this->getMsgs($request->id);
+        // Detectando se é um audio gravado, pois ele vem como video/webm do MediaRecorder
+        if($mimeType == 'video/webm') {
+            $file = $request->file('file');
+            $inputPath = $file->getPathname();
+            $hasVideo = trim(shell_exec("ffprobe -v error -select_streams v -show_entries stream=codec_type -of csv=p=0 " . escapeshellarg($inputPath)));
+            if ($hasVideo === '') { // Se for audio gravado mesmo ja converte como mp3 mas precisa do conversor ffmpeg instalado no servidor
+                $outputPath = Storage::disk('public')->path("whatsapp/{$randomId}.mp3");
+                shell_exec("ffmpeg -i " . escapeshellarg($inputPath) . " -vn -acodec libmp3lame -q:a 6 " . escapeshellarg($outputPath));
+                MensagensModel::create([
+                    'msg' => 'Audio gravado por '.Auth::user()->name,
+                    'conversa_id_from' => Auth::user()->departamento_id,
+                    'conversa_id_to' => $request->id,
+                    'link' => $randomId.".mp3",
+                    'tipo' => 5
+                ]);
+                WhatsappController::enviarAudio(env('PHONE_NUMBER_ID'), ConversasModel::find($request->id)->numero, url('/').'/storage/whatsapp/'.$randomId.".mp3", 'Audio gravado por '.Auth::user()->name);
+                ChatEnviaMensagem::dispatch($request->id);
+                return $this->getMsgs($request->id);
+            }
         }
+        $request->file('file')->storeAs('whatsapp', $randomId.".".$request->file('file')->getClientOriginalExtension(), ['disk' => 'public']);
 
         switch (explode('/',$mimeType)[0]) {
             case 'image':
@@ -169,13 +178,13 @@ class ChatController extends Controller
                 break;
             case 'video':
                 MensagensModel::create([
-                    'msg' => 'Video enviado por '.Auth::user()->name,
+                    'msg' => 'Enviado por '.Auth::user()->name,
                     'conversa_id_from' => Auth::user()->departamento_id,
                     'conversa_id_to' => $request->id,
                     'link' => $link,
                     'tipo' => 7
                 ]);
-                WhatsappController::enviarVideo(env('PHONE_NUMBER_ID'), ConversasModel::find($request->id)->numero, url('/').'/storage/whatsapp/'.$link, 'Video enviado por '.Auth::user()->name);
+                WhatsappController::enviarVideo(env('PHONE_NUMBER_ID'), ConversasModel::find($request->id)->numero, url('/').'/storage/whatsapp/'.$link, 'Enviado por '.Auth::user()->name);
                 break;
             default:
                 MensagensModel::create([
